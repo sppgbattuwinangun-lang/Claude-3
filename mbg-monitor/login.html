@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBG Monitor — Login</title>
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+</head>
+<body>
+  <div class="login-shell">
+    <aside class="login-aside">
+      <div class="brand">
+        <div class="logo">M</div>
+        <div>
+          <div>MBG Monitor</div>
+          <div style="font-size:12px;opacity:.85">Monitoring Sampah Pasca Distribusi</div>
+        </div>
+      </div>
+      <div>
+        <h1>Pantau serapan &amp; sampah Makan Bergizi Gratis secara real time.</h1>
+        <p>Aplikasi monitoring berbasis web untuk SPPG. Input data harian, lihat dashboard, grafik per item, dan ekspor ke Excel — sinkron otomatis di semua tab.</p>
+        <div class="features">
+          <div class="feat"><b>Real time</b><span>Sinkron antar tab via BroadcastChannel</span></div>
+          <div class="feat"><b>Login admin</b><span>Hash PBKDF2 + sesi aman</span></div>
+          <div class="feat"><b>Import Excel</b><span>Kompatibel format SPPG</span></div>
+          <div class="feat"><b>UI modern</b><span>Mode terang &amp; gelap, responsif</span></div>
+        </div>
+      </div>
+      <div class="footnote">&copy; <span id="year"></span> SPPG Battu Winangun · v1.0</div>
+    </aside>
+
+    <main class="login-main">
+      <div class="login-card" id="loginCard">
+        <h2>Masuk Admin</h2>
+        <p class="lead">Masukkan kredensial Anda untuk mengakses dashboard monitoring.</p>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="field">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="admin" required autofocus />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="password" name="password" placeholder="Masukkan password" required />
+              <button type="button" class="toggle-pw" id="togglePw" aria-label="Tampilkan/sembunyikan password">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="muted" style="display:flex;align-items:center;gap:6px;font-weight:500;">
+              <input type="checkbox" id="remember" /> Ingat saya selama 7 hari
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+          <div class="helper" id="firstHint"></div>
+        </form>
+      </div>
+
+      <!-- Card untuk paksa ganti password -->
+      <div class="login-card hidden" id="changeCard">
+        <h2>Ganti Password Default</h2>
+        <p class="lead">Demi keamanan, ganti password default sebelum melanjutkan.</p>
+        <div id="alert2" class="alert"></div>
+        <form id="changeForm" autocomplete="off">
+          <div class="field">
+            <label>Password baru</label>
+            <input type="password" id="newPw" required minlength="8" placeholder="Minimal 8 karakter" />
+          </div>
+          <div class="field">
+            <label>Konfirmasi password baru</label>
+            <input type="password" id="newPw2" required minlength="8" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Simpan &amp; Lanjut</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-area" id="toastArea"></div>
+
+  <script src="./assets/js/utils.js"></script>
+  <script src="./assets/js/auth.js"></script>
+  <script src="./assets/js/login.js"></script>
+</body>
+</html>
