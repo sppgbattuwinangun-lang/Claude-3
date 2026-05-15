@@ -163,19 +163,25 @@
   };
 
   // Sample data bila kosong (agar dashboard tidak kosong saat pertama kali dipakai)
-  S.loadSample = function () {
+  // Default 30 hari, menu sesuai pola Excel SPPG (Nasi Putih, Telur, Sayur Tumis, Tempe, Pisang)
+  S.loadSample = function (days) {
+    days = days || 30;
     const today = new Date();
     const rows = [];
     const menus = [
-      { nasi:'Nasi Putih', hewani:'Telur',     sayur:'Sayur Tumis',   nabati:'Tempe',    buah:'Pisang' },
-      { nasi:'Nasi Putih', hewani:'Ayam Bakar',sayur:'Sop Sayur',     nabati:'Tahu',     buah:'Jeruk' },
-      { nasi:'Nasi Putih', hewani:'Ikan Goreng',sayur:'Cap Cay',      nabati:'Tempe Goreng', buah:'Apel' },
-      { nasi:'Nasi Putih', hewani:'Daging Sapi',sayur:'Bayam Bening', nabati:'Tahu Bacem',   buah:'Semangka' },
-      { nasi:'Nasi Putih', hewani:'Telur Balado',sayur:'Tumis Kangkung', nabati:'Tempe Mendoan', buah:'Pepaya' }
+      { nasi:'Nasi Putih', hewani:'Telur',         sayur:'Sayur Tumis',     nabati:'Tempe',         buah:'Pisang' },
+      { nasi:'Nasi Putih', hewani:'Ayam Bakar',    sayur:'Sop Sayur',       nabati:'Tahu',          buah:'Jeruk' },
+      { nasi:'Nasi Putih', hewani:'Ikan Goreng',   sayur:'Cap Cay',         nabati:'Tempe Goreng',  buah:'Apel' },
+      { nasi:'Nasi Putih', hewani:'Daging Sapi',   sayur:'Bayam Bening',    nabati:'Tahu Bacem',    buah:'Semangka' },
+      { nasi:'Nasi Putih', hewani:'Telur Balado',  sayur:'Tumis Kangkung',  nabati:'Tempe Mendoan', buah:'Pepaya' },
+      { nasi:'Nasi Putih', hewani:'Ayam Goreng',   sayur:'Sayur Asem',      nabati:'Tahu Goreng',   buah:'Melon' },
+      { nasi:'Nasi Putih', hewani:'Ikan Bakar',    sayur:'Tumis Buncis',    nabati:'Tempe Bacem',   buah:'Mangga' }
     ];
-    for (let i = 14; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today.getTime() - i * 86400000);
-      const m = menus[i % menus.length];
+      // Skip weekend (program MBG umumnya hari sekolah Senin-Jumat)
+      // tapi tetap masukkan beberapa weekend agar grafik kontinu
+      const m = menus[(days - 1 - i) % menus.length];
       const tanggal = d.toISOString().slice(0,10);
       const porsi = 3000 + Math.round(Math.random() * 800);
       const rec = {
@@ -194,5 +200,21 @@
       rows.push(rec);
     }
     S.saveAll(rows);
+    return rows.length;
+  };
+
+  // Auto-seed: bila data kosong saat aplikasi dibuka, langsung muat sample agar dashboard hidup.
+  // Flag tersimpan supaya tidak auto-seed berulang kalau user sengaja menghapus data.
+  S.autoSeedIfEmpty = function () {
+    const SEED_FLAG = 'mbg.autoSeeded.v1';
+    const seeded = localStorage.getItem(SEED_FLAG);
+    if (seeded) return false;
+    if (S.getAll().length > 0) {
+      localStorage.setItem(SEED_FLAG, '1');
+      return false;
+    }
+    S.loadSample(30);
+    localStorage.setItem(SEED_FLAG, '1');
+    return true;
   };
 })();

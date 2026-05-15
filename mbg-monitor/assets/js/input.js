@@ -112,6 +112,13 @@
     document.getElementById('btnImport2').addEventListener('click', () => document.getElementById('fileImport2').click());
     document.getElementById('fileImport').addEventListener('change', handleImport);
     document.getElementById('fileImport2').addEventListener('change', handleImport);
+    // Import button di dashboard (top-right)
+    const bImp0 = document.getElementById('btnImport0');
+    const fImp0 = document.getElementById('fileImport0');
+    if (bImp0 && fImp0) {
+      bImp0.addEventListener('click', () => fImp0.click());
+      fImp0.addEventListener('change', handleImport);
+    }
 
     document.getElementById('btnLoadSample').addEventListener('click', () => {
       if (S.getAll().length && !confirm('Ini akan menambahkan data contoh ke catatan saat ini. Lanjut?')) return;

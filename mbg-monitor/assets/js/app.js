@@ -79,6 +79,11 @@
     n.addEventListener('click', () => App.go(n.dataset.page));
   });
 
+  // Auto-seed sample data jika benar-benar kosong (sekali saja, supaya dashboard tidak kosong saat pertama kali login)
+  if (S.autoSeedIfEmpty()) {
+    setTimeout(() => U.toast('30 hari data contoh dimuat — silakan import Excel Anda atau edit di tab "Input Harian"', 'info'), 600);
+  }
+
   // Init modules
   NS.dashboard.init();
   NS.input.init();
@@ -90,10 +95,28 @@
   App.go(PAGES.includes(hash) ? hash : 'dashboard');
 
   // Real-time: listen to data/settings changes (from this tab or others)
-  const reRender = () => {
+  let flashTimeout = null;
+  const flashLive = () => {
+    const liveEl = document.querySelector('.topbar .pulse');
+    if (!liveEl) return;
+    liveEl.style.transition = 'background .3s, color .3s';
+    liveEl.style.background = 'linear-gradient(135deg, #16a34a, #0d9488)';
+    liveEl.style.color = 'white';
+    clearTimeout(flashTimeout);
+    flashTimeout = setTimeout(() => {
+      liveEl.style.background = '';
+      liveEl.style.color = '';
+    }, 800);
+  };
+  const reRender = (payload, msg) => {
     NS.dashboard.render();
     NS.input.render();
     NS.charts.render();
+    flashLive();
+    // Toast khusus untuk update dari tab lain
+    if (msg && msg.payload && msg.payload.source === 'storage') {
+      U.toast('Data diperbarui dari tab/perangkat lain', 'info');
+    }
   };
   U.bus.on('data:changed', reRender);
   U.bus.on('settings:changed', reRender);
