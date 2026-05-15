@@ -553,3 +553,28 @@ table.tbl tfoot td {
 }
 .pagination .page-btn.active { background: var(--c-brand-1); color: white; border-color: transparent; }
 .pagination .page-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+
+/* =========================================================
+   Print friendly (Cetak / PDF dari dashboard)
+   ========================================================= */
+@media print {
+  body { background: #fff !important; }
+  .sidebar, .topbar, .menu-toggle, .icon-btn, .pagination,
+  .toolbar, .tab, .tabs, .nav-item, .modal-mask, .toast-area,
+  #emptyHint, .page-header .actions { display: none !important; }
+  .app { display: block !important; }
+  .main { display: block !important; }
+  .content { padding: 0 !important; }
+  .page { display: none !important; }
+  .page.active { display: block !important; }
+  .card, .kpi, .item-card {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    page-break-inside: avoid;
+    background: #fff !important;
+  }
+  .table-wrap { max-height: none !important; overflow: visible !important; }
+  table.tbl thead th { background: #f1f5f9 !important; color: #0f172a !important; position: static !important; }
+  .chart-wrap { height: 280px !important; page-break-inside: avoid; }
+}

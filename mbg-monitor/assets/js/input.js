@@ -51,7 +51,7 @@
 
   let sortBy = 'tanggal', sortDir = 'desc';
   let page = 1, pageSize = 25;
-  let filterText = '', filterStatus = '', filterMonth = '';
+  let filterText = '', filterStatus = '__all__', filterMonth = '';
 
   I.init = function () {
     renderHead();
@@ -95,6 +95,8 @@
     document.getElementById('filterMonth').addEventListener('change', (e) => {
       filterMonth = e.target.value; page = 1; I.render();
     });
+    const psEl = document.getElementById('pageSize');
+    if (psEl) psEl.addEventListener('change', (e) => { pageSize = parseInt(e.target.value, 10) || 25; page = 1; I.render(); });
 
     document.getElementById('btnAdd').addEventListener('click', () => openModal(null));
     document.getElementById('btnQuickAdd').addEventListener('click', () => {
@@ -155,9 +157,8 @@
       rows = rows.filter(r => Object.values(r).some(v => String(v ?? '').toLowerCase().includes(filterText)));
     }
     // status filter (total status)
-    if (filterStatus !== '' && filterStatus !== undefined) {
-      // empty option means show only rows with empty status
-      if (filterStatus === '') rows = rows.filter(r => !r.total_status);
+    if (filterStatus && filterStatus !== '__all__') {
+      if (filterStatus === '__empty__') rows = rows.filter(r => !r.total_status);
       else rows = rows.filter(r => r.total_status === filterStatus);
     }
     // month filter

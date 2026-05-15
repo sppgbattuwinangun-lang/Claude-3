@@ -18,6 +18,13 @@
         D.render();
       });
     });
+    // Empty-state shortcuts
+    const eAdd = document.getElementById('btnEmptyAdd');
+    const eImp = document.getElementById('btnEmptyImport');
+    const eSmp = document.getElementById('btnEmptySample');
+    if (eAdd) eAdd.addEventListener('click', () => { NS.app.go('input'); document.getElementById('btnAdd').click(); });
+    if (eImp) eImp.addEventListener('click', () => { NS.app.go('input'); document.getElementById('btnImport').click(); });
+    if (eSmp) eSmp.addEventListener('click', () => { document.getElementById('btnLoadSample').click(); });
     D.render();
   };
 
@@ -25,6 +32,10 @@
     const settings = S.getSettings();
     const rows = S.getAll().slice().sort((a,b) => String(a.tanggal||'').localeCompare(String(b.tanggal||'')));
     const agg = S.aggregate(rows, settings);
+
+    // Empty state hint untuk dashboard
+    const emptyEl = document.getElementById('emptyHint');
+    if (emptyEl) emptyEl.style.display = rows.length === 0 ? 'flex' : 'none';
 
     // KPIs
     document.getElementById('kpiDays').textContent  = U.fmt(agg.total.days, { maximumFractionDigits: 0 });
@@ -110,6 +121,13 @@
     return rows.slice(-n);
   }
 
+  function chartTextColor() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#334155';
+  }
+  function chartGridColor() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(148,163,184,.15)' : 'rgba(15,23,42,.08)';
+  }
+
   function renderTrend(rows, settings) {
     const ctx = document.getElementById('chartTrend').getContext('2d');
     const labels = rows.map(r => U.fmtDate(r.tanggal));
@@ -144,7 +162,7 @@
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom' },
+          legend: { position: 'bottom', labels: { color: chartTextColor() } },
           tooltip: {
             callbacks: {
               label: (c) => `${c.dataset.label}: ${U.fmt(c.parsed.y,{maximumFractionDigits:2})} kg`
@@ -152,7 +170,12 @@
           }
         },
         scales: {
-          y: { beginAtZero: true, ticks: { callback: v => U.fmt(v,{maximumFractionDigits:0}) } }
+          x: { ticks: { color: chartTextColor() }, grid: { color: chartGridColor() } },
+          y: {
+            beginAtZero: true,
+            ticks: { color: chartTextColor(), callback: v => U.fmt(v,{maximumFractionDigits:0}) },
+            grid: { color: chartGridColor() }
+          }
         }
       }
     });
@@ -170,7 +193,7 @@
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '62%',
         plugins: {
-          legend: { position: 'bottom' },
+          legend: { position: 'bottom', labels: { color: chartTextColor() } },
           tooltip: {
             callbacks: {
               label: (c) => `${c.label}: ${U.fmt(c.parsed,{maximumFractionDigits:2})} kg`

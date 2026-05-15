@@ -92,6 +92,21 @@
             </div>
           </div>
 
+          <div class="card mb-12" id="emptyHint" style="display:none; background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(236,72,153,.10)); border: 1px dashed rgba(245,158,11,.45);">
+            <div class="card-body" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+              <div style="font-size:28px;">🍱</div>
+              <div style="flex:1; min-width:220px;">
+                <div style="font-weight:700; margin-bottom:2px;">Belum ada data — yuk mulai</div>
+                <div class="muted" style="font-size:13px;">Tambahkan data pertama, import dari Excel, atau muat data contoh untuk melihat dashboard hidup.</div>
+              </div>
+              <div class="flex gap-8">
+                <button class="btn btn-primary" id="btnEmptyAdd">+ Tambah Data</button>
+                <button class="btn btn-info" id="btnEmptyImport">Import Excel</button>
+                <button class="btn btn-ghost" id="btnEmptySample">Data Contoh</button>
+              </div>
+            </div>
+          </div>
+
           <div class="grid cols-4" id="kpiGrid">
             <div class="kpi k-blue"><div class="label">Hari Tercatat</div><div class="value" id="kpiDays">0</div><div class="delta">Dari data input</div>
               <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
@@ -190,12 +205,18 @@
                   <input id="tableSearch" placeholder="Cari menu, status, tanggal…" />
                 </div>
                 <select id="filterStatus" class="btn btn-ghost btn-sm" style="height:36px;">
-                  <option value="">Semua Status</option>
+                  <option value="__all__">Semua Status</option>
                   <option value="Terserap">Terserap</option>
                   <option value="Perlu Evaluasi">Perlu Evaluasi</option>
-                  <option value="">— Belum Lengkap</option>
+                  <option value="__empty__">Belum Lengkap</option>
                 </select>
                 <input type="month" id="filterMonth" class="btn btn-ghost btn-sm" style="height:36px;" />
+                <select id="pageSize" class="btn btn-ghost btn-sm" style="height:36px;" title="Baris per halaman">
+                  <option value="10">10 / halaman</option>
+                  <option value="25" selected>25 / halaman</option>
+                  <option value="50">50 / halaman</option>
+                  <option value="100">100 / halaman</option>
+                </select>
                 <div class="grow"></div>
                 <span class="muted" id="rowCount">0 baris</span>
               </div>

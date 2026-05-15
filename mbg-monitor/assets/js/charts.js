@@ -67,10 +67,19 @@
         options: {
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { position: 'bottom' } },
-          scales: { y: { beginAtZero: true } }
+          plugins: { legend: { position: 'bottom', labels: { color: textColor() } } },
+          scales: {
+            x: { ticks: { color: textColor() }, grid: { color: gridColor() } },
+            y: { beginAtZero: true, ticks: { color: textColor() }, grid: { color: gridColor() } }
+          }
         }
       });
     });
   };
+  function textColor() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#334155';
+  }
+  function gridColor() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(148,163,184,.15)' : 'rgba(15,23,42,.08)';
+  }
 })();
