@@ -203,18 +203,7 @@
     return rows.length;
   };
 
-  // Auto-seed: bila data kosong saat aplikasi dibuka, langsung muat sample agar dashboard hidup.
-  // Flag tersimpan supaya tidak auto-seed berulang kalau user sengaja menghapus data.
-  S.autoSeedIfEmpty = function () {
-    const SEED_FLAG = 'mbg.autoSeeded.v1';
-    const seeded = localStorage.getItem(SEED_FLAG);
-    if (seeded) return false;
-    if (S.getAll().length > 0) {
-      localStorage.setItem(SEED_FLAG, '1');
-      return false;
-    }
-    S.loadSample(30);
-    localStorage.setItem(SEED_FLAG, '1');
-    return true;
-  };
+  // Auto-seed dinonaktifkan: user input data sendiri.
+  // Fungsi loadSample() tetap tersedia bila user klik tombol di Pengaturan/Data.
+  S.autoSeedIfEmpty = function () { return false; };
 })();

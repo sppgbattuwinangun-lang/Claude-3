@@ -112,13 +112,6 @@
     document.getElementById('btnImport2').addEventListener('click', () => document.getElementById('fileImport2').click());
     document.getElementById('fileImport').addEventListener('change', handleImport);
     document.getElementById('fileImport2').addEventListener('change', handleImport);
-    // Import button di dashboard (top-right)
-    const bImp0 = document.getElementById('btnImport0');
-    const fImp0 = document.getElementById('fileImport0');
-    if (bImp0 && fImp0) {
-      bImp0.addEventListener('click', () => fImp0.click());
-      fImp0.addEventListener('change', handleImport);
-    }
 
     document.getElementById('btnLoadSample').addEventListener('click', () => {
       if (S.getAll().length && !confirm('Ini akan menambahkan data contoh ke catatan saat ini. Lanjut?')) return;
@@ -264,7 +257,8 @@
     document.getElementById('modalMask').addEventListener('click', (e) => {
       if (e.target.id === 'modalMask') closeModal();
     });
-    document.getElementById('btnSave').addEventListener('click', saveModal);
+    document.getElementById('btnSave').addEventListener('click', () => saveModal(false));
+    document.getElementById('btnSaveAdd').addEventListener('click', () => saveModal(true));
     document.getElementById('btnDelete').addEventListener('click', () => {
       if (modalEditingId && confirm('Hapus baris ini?')) {
         S.remove(modalEditingId);
@@ -356,12 +350,33 @@
     document.getElementById('lpStatus').innerHTML = renderBadge(c.total_status);
   }
 
-  function saveModal() {
+  function saveModal(addAnother) {
     const rec = readForm();
     if (!rec.tanggal) { U.toast('Tanggal wajib diisi', 'error'); return; }
     if (rec.porsi === null || rec.porsi < 0) { U.toast('Jumlah porsi wajib diisi', 'error'); return; }
+    const isEdit = !!modalEditingId;
     S.upsert(rec);
-    U.toast(modalEditingId ? 'Data diperbarui' : 'Data ditambahkan', 'success');
-    closeModal();
+    U.toast(isEdit ? 'Data diperbarui' : 'Data tersimpan', 'success');
+    if (addAnother && !isEdit) {
+      // Auto-fill: tanggal +1 hari, menu di-keep, angka direset
+      const next = new Date(rec.tanggal);
+      next.setDate(next.getDate() + 1);
+      const f = (sel) => document.getElementById(sel);
+      const nextISO = next.toISOString().slice(0,10);
+      // Reset form tapi keep menu names + tanggal jadi besok
+      modalEditingId = null;
+      f('modalTitle').textContent = 'Tambah Data — ' + U.fmtDate(nextISO);
+      f('btnDelete').classList.add('hidden');
+      f('fId').value = '';
+      f('fTanggal').value = nextISO;
+      f('fHari').value = U.dayName(nextISO);
+      // Menu names di-keep agar input cepat
+      // Reset porsi & semua angka
+      ['fPorsi','fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS'].forEach(id => f(id).value = '');
+      updateLivePreview();
+      f('fPorsi').focus();
+    } else {
+      closeModal();
+    }
   }
 })();

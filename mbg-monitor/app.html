@@ -81,34 +81,28 @@
               <p>Rekap total sampah per item, total keseluruhan, dan status akhir berdasarkan ambang serapan.</p>
             </div>
             <div class="actions">
-              <input type="file" id="fileImport0" accept=".xlsx,.xls,.csv" class="hidden" />
-              <button class="btn btn-info" id="btnImport0" title="Import data dari file Excel">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Import Excel
-              </button>
               <button class="btn btn-ghost" id="btnExportPdf">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Cetak / PDF
               </button>
               <button class="btn btn-primary" id="btnQuickAdd">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Input Harian
+                Tambah Data Hari Ini
               </button>
             </div>
           </div>
 
-          <div class="card mb-12" id="emptyHint" style="display:none; background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(236,72,153,.10)); border: 1px dashed rgba(245,158,11,.45);">
-            <div class="card-body" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-              <div style="font-size:28px;">🍱</div>
-              <div style="flex:1; min-width:220px;">
-                <div style="font-weight:700; margin-bottom:2px;">Belum ada data — yuk mulai</div>
-                <div class="muted" style="font-size:13px;">Tambahkan data pertama, import dari Excel, atau muat data contoh untuk melihat dashboard hidup.</div>
+          <div class="card mb-12" id="emptyHint" style="display:none; background: linear-gradient(135deg, rgba(22,163,74,.12), rgba(13,148,136,.08)); border: 2px dashed rgba(22,163,74,.45);">
+            <div class="card-body" style="display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding: 24px;">
+              <div style="font-size:48px;">🍱</div>
+              <div style="flex:1; min-width:240px;">
+                <div style="font-weight:700; font-size:18px; margin-bottom:4px;">Selamat datang! Yuk mulai catat data hari ini</div>
+                <div class="muted" style="font-size:13.5px;">Klik tombol di kanan untuk langsung mengisi data pemakaian &amp; sampah hari ini. Tidak perlu Excel — semua bisa diinput langsung di sini.</div>
               </div>
-              <div class="flex gap-8">
-                <button class="btn btn-primary" id="btnEmptyAdd">+ Tambah Data</button>
-                <button class="btn btn-info" id="btnEmptyImport">Import Excel</button>
-                <button class="btn btn-ghost" id="btnEmptySample">Data Contoh</button>
-              </div>
+              <button class="btn btn-primary" id="btnEmptyAdd" style="font-size:15px; padding: 14px 24px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Mulai Input Data Sekarang
+              </button>
             </div>
           </div>
 
@@ -425,6 +419,9 @@
       <div class="modal-foot">
         <button class="btn btn-ghost" id="btnCancel">Batal</button>
         <button class="btn btn-danger hidden" id="btnDelete">Hapus</button>
+        <button class="btn btn-info" id="btnSaveAdd" title="Simpan lalu langsung tambah data hari berikutnya">
+          Simpan &amp; Tambah Lagi
+        </button>
         <button class="btn btn-primary" id="btnSave">Simpan</button>
       </div>
     </div>
@@ -445,6 +442,12 @@
       </div>
     </div>
   </div>
+
+  <!-- Floating Action Button untuk input cepat dari halaman manapun -->
+  <button class="fab" id="fab" title="Tambah data baru (Ctrl+N)" aria-label="Tambah data baru">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span class="fab-label">Tambah Data</span>
+  </button>
 
   <div class="toast-area" id="toastArea"></div>
 

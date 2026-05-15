@@ -21,6 +21,12 @@
   document.getElementById('whoRole').textContent = session.user.role || 'admin';
   document.getElementById('avatar').textContent = (session.user.username[0] || 'A').toUpperCase();
 
+  // Bersihkan auto-seed flag dari versi lama (sekali jalan) agar user yang
+  // sudah pernah login dengan data contoh bisa hapus & mulai dari kosong tanpa konflik.
+  if (localStorage.getItem('mbg.autoSeeded.v1')) {
+    localStorage.removeItem('mbg.autoSeeded.v1');
+  }
+
   // Theme button
   document.getElementById('btnTheme').addEventListener('click', () => {
     U.toggleTheme();
@@ -79,9 +85,13 @@
     n.addEventListener('click', () => App.go(n.dataset.page));
   });
 
-  // Auto-seed sample data jika benar-benar kosong (sekali saja, supaya dashboard tidak kosong saat pertama kali login)
-  if (S.autoSeedIfEmpty()) {
-    setTimeout(() => U.toast('30 hari data contoh dimuat — silakan import Excel Anda atau edit di tab "Input Harian"', 'info'), 600);
+  // Floating Action Button — buka modal tambah dari halaman manapun
+  const fab = document.getElementById('fab');
+  if (fab) {
+    fab.addEventListener('click', () => {
+      App.go('input');
+      setTimeout(() => document.getElementById('btnAdd').click(), 50);
+    });
   }
 
   // Init modules

@@ -578,3 +578,46 @@ table.tbl tfoot td {
   table.tbl thead th { background: #f1f5f9 !important; color: #0f172a !important; position: static !important; }
   .chart-wrap { height: 280px !important; page-break-inside: avoid; }
 }
+
+
+/* =========================================================
+   Floating Action Button (FAB) — tombol Tambah Data mengambang
+   ========================================================= */
+.fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px 14px 18px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: white;
+  background: linear-gradient(135deg, var(--c-brand-1), var(--c-brand-3));
+  box-shadow: 0 12px 28px rgba(13, 148, 136, .45), 0 4px 10px rgba(15, 23, 42, .15);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 18px 36px rgba(13, 148, 136, .55), 0 6px 14px rgba(15, 23, 42, .2);
+}
+.fab:active { transform: translateY(0); }
+.fab .fab-label { white-space: nowrap; }
+
+/* Sembunyikan FAB saat modal terbuka */
+.modal-mask.show ~ .fab,
+body:has(.modal-mask.show) .fab { display: none; }
+
+/* Sembunyikan label di mobile, jadi tombol bulat saja */
+@media (max-width: 640px) {
+  .fab { padding: 14px; }
+  .fab .fab-label { display: none; }
+}
+
+/* Tidak tampil saat print */
+@media print { .fab { display: none !important; } }
