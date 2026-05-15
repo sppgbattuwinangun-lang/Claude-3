@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>MBG Monitor</title>
+  <meta http-equiv="refresh" content="0; url=./mbg-monitor/login.html" />
+  <style>
+    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; display:grid; place-items:center; min-height:100vh; margin:0; background: linear-gradient(135deg,#16a34a,#0d9488); color:white; }
+    .card { background: rgba(255,255,255,.1); padding: 32px 40px; border-radius: 16px; text-align:center; border: 1px solid rgba(255,255,255,.2); }
+    .spin { width:36px; height:36px; border: 3px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; margin: 0 auto 12px; animation: s 1s linear infinite; }
+    @keyframes s { to { transform: rotate(360deg); } }
+    a { color: #fef3c7; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spin"></div>
+    <p>Mengarahkan ke MBG Monitor…</p>
+    <p><a href="./mbg-monitor/login.html">Klik di sini bila tidak otomatis berpindah</a></p>
+  </div>
+  <script>
+    location.replace('./mbg-monitor/login.html');
+  </script>
+</body>
+</html>
