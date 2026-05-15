@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MBG Monitor — Dashboard</title>
   <link rel="stylesheet" href="./assets/css/styles.css?v=1778879456" />
+  <script>
+    // Error handler paling awal
+    window.addEventListener('error', function (e) {
+      try {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:14px 20px;font:13px/1.5 -apple-system,sans-serif;z-index:99999;border-bottom:2px solid #ef4444';
+        d.innerHTML = '<b>Error JS:</b> ' + (e.message || e.error) + '<br><small>File: ' + (e.filename || '-') + ' baris ' + (e.lineno || '?') + '</small>';
+        (document.body || document.documentElement).appendChild(d);
+      } catch (ex) {}
+    });
+    // Bersihkan session corrupt
+    try {
+      var s = localStorage.getItem('mbg.session');
+      if (s) { JSON.parse(s); }
+    } catch (e) {
+      localStorage.removeItem('mbg.session');
+    }
+  </script>
   <!-- Chart.js (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <!-- SheetJS (xlsx) -->

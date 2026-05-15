@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MBG Monitor — Login</title>
   <link rel="stylesheet" href="./assets/css/styles.css?v=1778879456" />
+  <script>
+    // Error handler paling awal — tampilkan error apapun yang terjadi sebelum script lain load
+    window.addEventListener('error', function (e) {
+      try {
+        document.body && (document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:14px 20px;font:13px/1.5 -apple-system,sans-serif;z-index:99999;border-bottom:2px solid #ef4444"><b>Error JS:</b> ' + (e.message || e.error) + '<br><small>File: ' + (e.filename || '-') + ' baris ' + (e.lineno || '?') + '</small></div>');
+      } catch (ex) {}
+    });
+    // Bersihkan session corrupt yang mungkin nyangkut
+    try {
+      var s = localStorage.getItem('mbg.session');
+      if (s) { JSON.parse(s); }
+    } catch (e) {
+      localStorage.removeItem('mbg.session');
+    }
+  </script>
 </head>
 <body>
   <div class="login-shell">

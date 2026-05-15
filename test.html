@@ -2,70 +2,80 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <title>Test Halaman MBG Monitor</title>
+  <title>Test & Diagnose MBG Monitor</title>
   <style>
-    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; padding: 30px; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; padding: 30px; max-width: 720px; margin: 0 auto; line-height: 1.6; }
     h1 { color: #16a34a; }
+    h2 { margin-top: 32px; }
     .ok { color: #16a34a; font-weight: bold; }
     .err { color: #ef4444; font-weight: bold; }
     .box { padding: 16px; border-radius: 10px; background: #f0fdf4; border: 2px solid #16a34a; margin: 12px 0; }
+    .box.warn { background: #fef3c7; border-color: #f59e0b; }
     .box.error { background: #fef2f2; border-color: #ef4444; }
-    a { display: inline-block; padding: 12px 20px; background: #16a34a; color: white; text-decoration: none; border-radius: 8px; margin: 8px 4px; font-weight: 600; }
-    a:hover { background: #15803d; }
-    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
-    ol { padding-left: 24px; }
+    .btn { display: inline-block; padding: 12px 20px; color: white; text-decoration: none; border-radius: 8px; margin: 6px 4px; font-weight: 600; border: 0; cursor: pointer; font-size: 14px; }
+    .btn-green { background: #16a34a; } .btn-green:hover { background: #15803d; }
+    .btn-red { background: #ef4444; } .btn-red:hover { background: #b91c1c; }
+    .btn-blue { background: #3b82f6; } .btn-blue:hover { background: #1d4ed8; }
+    .btn-amber { background: #f59e0b; } .btn-amber:hover { background: #b45309; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12.5px; }
     ol li { margin: 8px 0; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
   </style>
 </head>
 <body>
-  <h1>✅ Hosting Bekerja!</h1>
-  <p>Bila halaman ini muncul, artinya GitHub Pages sudah aktif dan file sudah ter-deploy dengan benar.</p>
+  <h1>🩺 Test & Diagnose MBG Monitor</h1>
+  <p>Halaman ini untuk menguji & memperbaiki masalah <b>layar putih</b> di halaman utama.</p>
 
   <div class="box">
-    <strong>Status File Tes:</strong>
-    <ul id="status">
+    <strong>Status File:</strong>
+    <ul>
       <li>Halaman test.html: <span class="ok">✓ OK (Anda lihat ini)</span></li>
       <li id="cssCheck">CSS styles.css: <span>Memeriksa...</span></li>
-      <li id="jsCheck">JavaScript utils.js: <span>Memeriksa...</span></li>
+      <li id="utilsCheck">JS utils.js: <span>Memeriksa...</span></li>
+      <li id="authCheck">JS auth.js: <span>Memeriksa...</span></li>
       <li id="loginCheck">login.html: <span>Memeriksa...</span></li>
       <li id="appCheck">app.html: <span>Memeriksa...</span></li>
     </ul>
+    <p id="storage" style="margin-top:8px;font-size:13px;">Storage: <span>Memeriksa...</span></p>
   </div>
 
-  <h2>Coba Akses Aplikasi</h2>
+  <div class="box warn">
+    <strong>⚠️ JIKA HALAMAN LOGIN TETAP PUTIH</strong>
+    <p style="margin:6px 0">Kemungkinan besar <b>cache atau session lama nyangkut</b> di browser. Klik tombol di bawah untuk reset total:</p>
+    <button class="btn btn-red" onclick="resetAll()">🗑️ Hapus Semua Cache & Session</button>
+    <button class="btn btn-amber" onclick="resetSession()">🔄 Hapus Session Saja</button>
+    <p id="resetMsg" style="margin-top:8px;color:#16a34a;font-weight:600;display:none">✓ Selesai! Sekarang klik "Buka Halaman Login" lagi.</p>
+  </div>
+
+  <h2>Buka Halaman Aplikasi</h2>
   <p>
-    <a href="./login.html">Buka Halaman Login</a>
-    <a href="./index.html">Buka Halaman Utama</a>
-    <a href="./app.html">Buka Dashboard (jika sudah login)</a>
+    <a class="btn btn-green" href="./login.html">🔐 Buka Halaman Login</a>
+    <a class="btn btn-blue" href="./index.html">🏠 Buka Halaman Utama</a>
+    <a class="btn btn-blue" href="./app.html">📊 Buka Dashboard</a>
   </p>
 
-  <h2>Bila Halaman Login/Dashboard Tetap Putih</h2>
+  <h2>Bila Masih Putih, Buka di Tab Incognito</h2>
+  <p>Tekan <code>Ctrl+Shift+N</code> (atau <code>Cmd+Shift+N</code> di Mac) untuk buka tab Incognito baru, lalu paste URL ini:</p>
+  <pre>https://sppgbattuwinangun-lang.github.io/Claude-3/login.html</pre>
+
+  <h2>Bila Tetap Putih (Last Resort)</h2>
   <ol>
-    <li>Lakukan <strong>hard refresh</strong>: tekan <code>Ctrl+Shift+R</code> (Windows) atau <code>Cmd+Shift+R</code> (Mac)</li>
-    <li>Atau buka di tab <strong>Incognito/Private</strong>: <code>Ctrl+Shift+N</code></li>
-    <li>Atau hapus cache: F12 → Application → Clear Storage → Clear site data</li>
-    <li>Atau buka langsung URL ini di tab baru:
-      <ul>
-        <li><a href="https://sppgbattuwinangun-lang.github.io/Claude-3/login.html">https://sppgbattuwinangun-lang.github.io/Claude-3/login.html</a></li>
-      </ul>
-    </li>
+    <li>Tekan <code>F12</code> di Chrome → tab <b>Console</b> → screenshot tulisan merah → kabari saya</li>
+    <li>Atau klik kanan halaman putih → <b>View Page Source</b> (Ctrl+U) → screenshot apa yang muncul</li>
   </ol>
 
   <h2>Login Default</h2>
   <p>Username: <code>admin</code> · Password: <code>admin123</code> (akan diminta ganti pada login pertama)</p>
 
   <script>
-    // Tes apakah file lain bisa di-fetch
     const baseUrl = location.href.replace(/\/test\.html.*$/, '/');
 
-    function check(id, url, label) {
+    function check(id, url) {
       fetch(url, { cache: 'no-store' })
         .then(r => {
           const el = document.getElementById(id);
           if (!el) return;
-          el.querySelector('span').textContent = r.ok
-            ? `✓ OK (HTTP ${r.status})`
-            : `✗ ERROR ${r.status}`;
+          el.querySelector('span').textContent = r.ok ? `✓ OK (${r.status})` : `✗ ERROR ${r.status}`;
           el.querySelector('span').className = r.ok ? 'ok' : 'err';
         })
         .catch(e => {
@@ -78,9 +88,53 @@
     }
 
     check('cssCheck', baseUrl + 'assets/css/styles.css');
-    check('jsCheck', baseUrl + 'assets/js/utils.js');
+    check('utilsCheck', baseUrl + 'assets/js/utils.js');
+    check('authCheck', baseUrl + 'assets/js/auth.js');
     check('loginCheck', baseUrl + 'login.html');
     check('appCheck', baseUrl + 'app.html');
+
+    // Cek storage
+    try {
+      const keys = ['mbg.session', 'mbg.users.v1', 'mbg.data.v1', 'mbg.settings.v1'];
+      const found = keys.filter(k => localStorage.getItem(k) !== null);
+      const sEl = document.getElementById('storage').querySelector('span');
+      if (found.length === 0) {
+        sEl.textContent = 'Kosong (fresh state)';
+        sEl.className = 'ok';
+      } else {
+        sEl.textContent = found.join(', ');
+        sEl.className = 'ok';
+      }
+    } catch (e) {
+      document.getElementById('storage').querySelector('span').textContent = 'Tidak dapat dibaca: ' + e.message;
+    }
+
+    function resetAll() {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        // Coba unregister service worker bila ada
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+        }
+        // Hapus cache storage
+        if ('caches' in window) {
+          caches.keys().then(names => names.forEach(n => caches.delete(n)));
+        }
+        document.getElementById('resetMsg').style.display = 'block';
+        document.getElementById('resetMsg').textContent = '✓ Cache & session dibersihkan! Tunggu 2 detik lalu klik "Buka Halaman Login".';
+      } catch (e) {
+        alert('Error reset: ' + e.message);
+      }
+    }
+
+    function resetSession() {
+      try {
+        localStorage.removeItem('mbg.session');
+        document.getElementById('resetMsg').style.display = 'block';
+        document.getElementById('resetMsg').textContent = '✓ Session dihapus! Klik "Buka Halaman Login".';
+      } catch (e) { alert(e.message); }
+    }
   </script>
 </body>
 </html>
