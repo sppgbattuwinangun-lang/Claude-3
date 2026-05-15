@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBG Monitor — Dashboard</title>
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+  <!-- Chart.js (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- SheetJS (xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo">M</div>
+        <div>
+          <div class="name">MBG Monitor</div>
+          <div class="sub">Sampah Pasca Distribusi</div>
+        </div>
+      </div>
+
+      <div class="nav-item active" data-page="dashboard">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="input">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Input Harian
+      </div>
+      <div class="nav-item" data-page="grafik">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-7"/></svg>
+        Grafik Item
+      </div>
+      <div class="nav-item" data-page="data">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+        Data &amp; Excel
+      </div>
+      <div class="nav-item" data-page="panduan">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Panduan
+      </div>
+      <div class="nav-item" data-page="settings">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.7 1 1.1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        Pengaturan
+      </div>
+
+      <div class="spacer"></div>
+      <div class="who">
+        <div class="avatar" id="avatar">A</div>
+        <div style="flex:1; line-height:1.2;">
+          <div style="color:var(--text);font-weight:600;font-size:13px;" id="whoName">admin</div>
+          <div id="whoRole">administrator</div>
+        </div>
+        <button class="icon-btn" title="Keluar" id="btnLogout" aria-label="Logout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-mask" id="sidebarMask"></div>
+
+    <section class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="title" id="pageTitle">Dashboard</div>
+        <div class="pulse"><span id="liveStatus">Real-time aktif</span></div>
+        <button class="icon-btn" id="btnTheme" title="Tukar tema" aria-label="Tema">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
+        </button>
+      </header>
+
+      <div class="content">
+        <!-- ============ DASHBOARD ============ -->
+        <section class="page active" id="page-dashboard">
+          <div class="page-header">
+            <div>
+              <h1>Dashboard Analisis Sampah MBG</h1>
+              <p>Rekap total sampah per item, total keseluruhan, dan status akhir berdasarkan ambang serapan.</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn-ghost" id="btnExportPdf">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Cetak / PDF
+              </button>
+              <button class="btn btn-primary" id="btnQuickAdd">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Input Harian
+              </button>
+            </div>
+          </div>
+
+          <div class="card mb-12" id="emptyHint" style="display:none; background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(236,72,153,.10)); border: 1px dashed rgba(245,158,11,.45);">
+            <div class="card-body" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+              <div style="font-size:28px;">🍱</div>
+              <div style="flex:1; min-width:220px;">
+                <div style="font-weight:700; margin-bottom:2px;">Belum ada data — yuk mulai</div>
+                <div class="muted" style="font-size:13px;">Tambahkan data pertama, import dari Excel, atau muat data contoh untuk melihat dashboard hidup.</div>
+              </div>
+              <div class="flex gap-8">
+                <button class="btn btn-primary" id="btnEmptyAdd">+ Tambah Data</button>
+                <button class="btn btn-info" id="btnEmptyImport">Import Excel</button>
+                <button class="btn btn-ghost" id="btnEmptySample">Data Contoh</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid cols-4" id="kpiGrid">
+            <div class="kpi k-blue"><div class="label">Hari Tercatat</div><div class="value" id="kpiDays">0</div><div class="delta">Dari data input</div>
+              <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            </div>
+            <div class="kpi k-green"><div class="label">Total Pemakaian</div><div class="value" id="kpiUse">0 kg</div><div class="delta">Keseluruhan item</div>
+              <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg></div>
+            </div>
+            <div class="kpi k-red"><div class="label">Total Sampah</div><div class="value" id="kpiWaste">0 kg</div><div class="delta">Keseluruhan item</div>
+              <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></div>
+            </div>
+            <div class="kpi k-amber"><div class="label">% Serapan Keseluruhan</div><div class="value" id="kpiAbsorb">—</div><div class="delta" id="kpiAbsorbStatus">—</div>
+              <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            </div>
+          </div>
+
+          <div class="grid cols-3 mt-16">
+            <div class="card" style="grid-column: span 2;">
+              <div class="card-head">
+                <div>
+                  <h3>Tren Harian — Pemakaian vs Sampah Total</h3>
+                  <div class="sub">Per tanggal input</div>
+                </div>
+                <div class="tabs">
+                  <div class="tab active" data-range="all">Semua</div>
+                  <div class="tab" data-range="30">30 hari</div>
+                  <div class="tab" data-range="14">14 hari</div>
+                  <div class="tab" data-range="7">7 hari</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Komposisi Sampah per Item</h3><div class="sub">Total kumulatif</div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="chartDonut"></canvas></div></div>
+            </div>
+          </div>
+
+          <div class="page-header mt-16"><h1 style="font-size:18px;">Ringkasan Per Item</h1></div>
+          <div class="grid cols-3" id="itemSummaryGrid"></div>
+
+          <div class="card mt-16">
+            <div class="card-head"><h3>Ringkasan Total Keseluruhan</h3><div class="sub">Berdasarkan ambang serapan saat ini</div></div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th class="col-num">Pemakaian (kg)</th>
+                      <th class="col-num">Sampah (kg)</th>
+                      <th class="col-num">% Sampah</th>
+                      <th class="col-num">% Serapan</th>
+                      <th>Ambang Terserap</th>
+                      <th>Status Akhir</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recapBody"></tbody>
+                  <tfoot id="recapFoot"></tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ INPUT HARIAN ============ -->
+        <section class="page" id="page-input">
+          <div class="page-header">
+            <div>
+              <h1>Input Harian</h1>
+              <p>Tambahkan, edit, dan hapus catatan pemakaian &amp; sampah harian. Semua kolom Excel didukung penuh.</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn-ghost" id="btnImport">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import Excel
+              </button>
+              <input type="file" id="fileImport" accept=".xlsx,.xls,.csv" class="hidden" />
+              <button class="btn btn-ghost" id="btnExport">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Excel
+              </button>
+              <button class="btn btn-primary" id="btnAdd">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Data
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <div class="toolbar">
+                <div class="search">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input id="tableSearch" placeholder="Cari menu, status, tanggal…" />
+                </div>
+                <select id="filterStatus" class="btn btn-ghost btn-sm" style="height:36px;">
+                  <option value="__all__">Semua Status</option>
+                  <option value="Terserap">Terserap</option>
+                  <option value="Perlu Evaluasi">Perlu Evaluasi</option>
+                  <option value="__empty__">Belum Lengkap</option>
+                </select>
+                <input type="month" id="filterMonth" class="btn btn-ghost btn-sm" style="height:36px;" />
+                <select id="pageSize" class="btn btn-ghost btn-sm" style="height:36px;" title="Baris per halaman">
+                  <option value="10">10 / halaman</option>
+                  <option value="25" selected>25 / halaman</option>
+                  <option value="50">50 / halaman</option>
+                  <option value="100">100 / halaman</option>
+                </select>
+                <div class="grow"></div>
+                <span class="muted" id="rowCount">0 baris</span>
+              </div>
+              <div class="table-wrap" style="max-height: 65vh;">
+                <table class="tbl" id="dataTable">
+                  <thead id="dataHead"></thead>
+                  <tbody id="dataBody"></tbody>
+                </table>
+              </div>
+              <div class="pagination" id="pagination"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ GRAFIK ITEM ============ -->
+        <section class="page" id="page-grafik">
+          <div class="page-header">
+            <div>
+              <h1>Grafik Per Item</h1>
+              <p>Bandingkan pemakaian vs sampah harian untuk setiap item makanan.</p>
+            </div>
+          </div>
+          <div class="grid cols-2" id="chartGrid"></div>
+        </section>
+
+        <!-- ============ DATA & EXCEL ============ -->
+        <section class="page" id="page-data">
+          <div class="page-header">
+            <div>
+              <h1>Data &amp; Excel</h1>
+              <p>Import data dari file Excel monitoring SPPG, ekspor ulang, atau hapus seluruh data.</p>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="card">
+              <div class="card-head"><h3>Import dari Excel</h3><div class="sub">Format kompatibel SPPG</div></div>
+              <div class="card-body">
+                <p class="muted" style="margin-top:0">Format yang didukung: <b>.xlsx</b>, <b>.xls</b>, <b>.csv</b>. Header yang dideteksi otomatis: Tanggal, Hari, Menu Nasi/Protein Hewani/Sayur/Protein Nabati/Buah, Jumlah Porsi, Pemakaian &amp; Sampah (kg) tiap item.</p>
+                <input type="file" id="fileImport2" accept=".xlsx,.xls,.csv" class="hidden" />
+                <div class="flex gap-8">
+                  <button class="btn btn-info" id="btnImport2">Pilih File Excel</button>
+                  <button class="btn btn-ghost" id="btnLoadSample">Muat Data Contoh</button>
+                </div>
+                <div class="helper mt-12">Data akan ditambahkan ke catatan saat ini (tidak menimpa).</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Export &amp; Reset</h3><div class="sub">Backup atau bersihkan data</div></div>
+              <div class="card-body">
+                <div class="flex gap-8" style="flex-wrap:wrap;">
+                  <button class="btn btn-primary" id="btnExport2">Export Excel (xlsx)</button>
+                  <button class="btn btn-ghost" id="btnExportCsv">Export CSV</button>
+                  <button class="btn btn-ghost" id="btnExportJson">Export JSON</button>
+                </div>
+                <div class="helper mt-12">Hasil export berisi semua kolom Excel asli + kolom hasil hitung.</div>
+                <hr style="border:0;border-top:1px solid var(--border);margin:14px 0;" />
+                <button class="btn btn-danger" id="btnReset">Hapus Semua Data</button>
+                <div class="helper mt-12 muted">Tindakan ini tidak dapat dibatalkan.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ PANDUAN ============ -->
+        <section class="page" id="page-panduan">
+          <div class="page-header">
+            <div>
+              <h1>Panduan &amp; Parameter Analisis</h1>
+              <p>Aturan perhitungan sesuai sheet "Panduan" pada Excel sumber.</p>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="card">
+              <div class="card-head"><h3>Parameter Penilaian</h3></div>
+              <div class="card-body">
+                <table class="tbl"><tbody>
+                  <tr><td>Ambang minimal serapan agar status = <b>Terserap</b></td><td class="col-num"><span id="pAmbang">80%</span></td></tr>
+                  <tr><td>Ambang maksimal sampah terhadap pemakaian</td><td class="col-num"><span id="pAmbang2">20%</span></td></tr>
+                  <tr><td>Satuan input</td><td class="col-num">kilogram (kg)</td></tr>
+                  <tr><td>Keterangan status</td><td>Terserap jika % Serapan ≥ ambang atau % Sampah ≤ (1 − ambang)</td></tr>
+                </tbody></table>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Cara Pakai</h3></div>
+              <div class="card-body">
+                <ol style="padding-left:18px;line-height:1.7;margin:0;">
+                  <li>Buka menu <b>Input Harian</b>, klik <b>Tambah Data</b>.</li>
+                  <li>Isi tanggal, nama menu, jumlah porsi, total pemakaian (kg), dan jumlah sampah (kg) per item.</li>
+                  <li>Semua kolom % Sampah, % Serapan, dan Status terhitung otomatis untuk tiap item dan total.</li>
+                  <li>Buka <b>Dashboard</b> untuk rekap, ambang batas, dan status akhir.</li>
+                  <li>Buka <b>Grafik Item</b> untuk membandingkan pemakaian vs sampah tiap item.</li>
+                  <li>Gunakan <b>Import Excel</b> untuk memuat data dari file SPPG.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SETTINGS ============ -->
+        <section class="page" id="page-settings">
+          <div class="page-header">
+            <div>
+              <h1>Pengaturan</h1>
+              <p>Ambang serapan, akun admin, dan preferensi tampilan.</p>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="card">
+              <div class="card-head"><h3>Ambang Serapan</h3><div class="sub">Default 80%</div></div>
+              <div class="card-body">
+                <div class="field">
+                  <label>Persentase serapan minimum (%)</label>
+                  <input type="number" id="setAmbang" min="1" max="100" step="1" />
+                </div>
+                <button class="btn btn-primary" id="btnSaveSetting">Simpan</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><h3>Ganti Password</h3></div>
+              <div class="card-body">
+                <div class="field"><label>Password lama</label><input type="password" id="oldPw" /></div>
+                <div class="field"><label>Password baru (min 8)</label><input type="password" id="newPwSet" minlength="8" /></div>
+                <div class="field"><label>Konfirmasi password baru</label><input type="password" id="newPwSet2" minlength="8" /></div>
+                <button class="btn btn-primary" id="btnChangePw">Perbarui Password</button>
+              </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+              <div class="card-head">
+                <h3>Manajemen Admin</h3>
+                <button class="btn btn-info btn-sm" id="btnAddUser">Tambah Admin</button>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap">
+                  <table class="tbl">
+                    <thead><tr><th>Username</th><th>Role</th><th>Dibuat</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="userTable"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal: Add/Edit -->
+  <div class="modal-mask" id="modalMask">
+    <div class="modal modal-lg" id="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Tambah Data</h3>
+        <button class="icon-btn" id="modalClose" aria-label="Tutup">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="entryForm" autocomplete="off">
+          <input type="hidden" id="fId" />
+          <div class="form-grid">
+            <h4>Informasi Hari</h4>
+            <div class="field"><label>Tanggal *</label><input type="date" id="fTanggal" required /></div>
+            <div class="field"><label>Hari</label><input type="text" id="fHari" readonly placeholder="Otomatis" /></div>
+            <div class="field full"><label>Jumlah Porsi *</label><input type="number" id="fPorsi" min="0" step="1" required /></div>
+
+            <h4>Nama Menu</h4>
+            <div class="field"><label>Menu Nasi</label><input type="text" id="fMenuNasi" placeholder="cth: Nasi Putih" /></div>
+            <div class="field"><label>Menu Protein Hewani</label><input type="text" id="fMenuHewani" placeholder="cth: Telur" /></div>
+            <div class="field"><label>Menu Sayur</label><input type="text" id="fMenuSayur" placeholder="cth: Sayur Tumis" /></div>
+            <div class="field"><label>Menu Protein Nabati</label><input type="text" id="fMenuNabati" placeholder="cth: Tempe" /></div>
+            <div class="field full"><label>Menu Buah</label><input type="text" id="fMenuBuah" placeholder="cth: Pisang" /></div>
+
+            <h4>Pemakaian &amp; Sampah (kg)</h4>
+            <div class="field"><label>Pemakaian Nasi (kg)</label><input type="number" id="fNasiP" min="0" step="0.01" /></div>
+            <div class="field"><label>Sampah Nasi (kg)</label><input type="number" id="fNasiS" min="0" step="0.01" /></div>
+
+            <div class="field"><label>Pemakaian Protein Hewani (kg)</label><input type="number" id="fHewaniP" min="0" step="0.01" /></div>
+            <div class="field"><label>Sampah Protein Hewani (kg)</label><input type="number" id="fHewaniS" min="0" step="0.01" /></div>
+
+            <div class="field"><label>Pemakaian Sayur (kg)</label><input type="number" id="fSayurP" min="0" step="0.01" /></div>
+            <div class="field"><label>Sampah Sayur (kg)</label><input type="number" id="fSayurS" min="0" step="0.01" /></div>
+
+            <div class="field"><label>Pemakaian Protein Nabati (kg)</label><input type="number" id="fNabatiP" min="0" step="0.01" /></div>
+            <div class="field"><label>Sampah Protein Nabati (kg)</label><input type="number" id="fNabatiS" min="0" step="0.01" /></div>
+
+            <div class="field"><label>Pemakaian Buah (kg)</label><input type="number" id="fBuahP" min="0" step="0.01" /></div>
+            <div class="field"><label>Sampah Buah (kg)</label><input type="number" id="fBuahS" min="0" step="0.01" /></div>
+          </div>
+
+          <div class="card mt-16" style="background:var(--bg-soft); border-style:dashed;">
+            <div class="card-body">
+              <div class="grid cols-3" id="livePreview">
+                <div><div class="muted" style="font-size:12px;">Total Pemakaian</div><div style="font-weight:700;font-size:18px;" id="lpTotalP">0 kg</div></div>
+                <div><div class="muted" style="font-size:12px;">Total Sampah</div><div style="font-weight:700;font-size:18px;" id="lpTotalS">0 kg</div></div>
+                <div><div class="muted" style="font-size:12px;">Status Total</div><div style="font-weight:700;font-size:18px;" id="lpStatus">—</div></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="btnCancel">Batal</button>
+        <button class="btn btn-danger hidden" id="btnDelete">Hapus</button>
+        <button class="btn btn-primary" id="btnSave">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add User -->
+  <div class="modal-mask" id="userMask">
+    <div class="modal">
+      <div class="modal-head"><h3>Tambah Admin</h3><button class="icon-btn" id="userClose">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Username</label><input type="text" id="newUsername" /></div>
+        <div class="field"><label>Password (min 8)</label><input type="password" id="newUserPw" minlength="8" /></div>
+        <div class="field"><label>Konfirmasi Password</label><input type="password" id="newUserPw2" minlength="8" /></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="userCancel">Batal</button>
+        <button class="btn btn-primary" id="userSave">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-area" id="toastArea"></div>
+
+  <!-- Scripts -->
+  <script src="./assets/js/utils.js"></script>
+  <script src="./assets/js/auth.js"></script>
+  <script src="./assets/js/store.js"></script>
+  <script src="./assets/js/excel.js"></script>
+  <script src="./assets/js/dashboard.js"></script>
+  <script src="./assets/js/input.js"></script>
+  <script src="./assets/js/charts.js"></script>
+  <script src="./assets/js/settings.js"></script>
+  <script src="./assets/js/app.js"></script>
+</body>
+</html>

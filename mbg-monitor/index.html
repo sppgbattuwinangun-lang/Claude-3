@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>MBG Monitor — Memuat…</title>
+  <meta http-equiv="refresh" content="0; url=./login.html" />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+</head>
+<body class="boot-screen">
+  <div class="boot-card">
+    <div class="boot-spinner"></div>
+    <p>Mengarahkan ke halaman login…</p>
+    <a href="./login.html">Klik di sini bila tidak otomatis berpindah</a>
+  </div>
+  <script>
+    // Jika sudah login, langsung ke dashboard
+    try {
+      const session = JSON.parse(localStorage.getItem('mbg.session') || 'null');
+      if (session && session.user && session.expires > Date.now()) {
+        location.replace('./app.html');
+      } else {
+        location.replace('./login.html');
+      }
+    } catch (e) {
+      location.replace('./login.html');
+    }
+  </script>
+</body>
+</html>
