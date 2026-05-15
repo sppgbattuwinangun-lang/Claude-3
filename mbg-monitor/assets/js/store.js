@@ -164,37 +164,63 @@
 
   // Sample data bila kosong (agar dashboard tidak kosong saat pertama kali dipakai)
   // Default 30 hari, menu sesuai pola Excel SPPG (Nasi Putih, Telur, Sayur Tumis, Tempe, Pisang)
+  // Variasi sengaja dibuat agar ada hari "Terserap" dan "Perlu Evaluasi"
   S.loadSample = function (days) {
     days = days || 30;
     const today = new Date();
     const rows = [];
     const menus = [
-      { nasi:'Nasi Putih', hewani:'Telur',         sayur:'Sayur Tumis',     nabati:'Tempe',         buah:'Pisang' },
-      { nasi:'Nasi Putih', hewani:'Ayam Bakar',    sayur:'Sop Sayur',       nabati:'Tahu',          buah:'Jeruk' },
-      { nasi:'Nasi Putih', hewani:'Ikan Goreng',   sayur:'Cap Cay',         nabati:'Tempe Goreng',  buah:'Apel' },
-      { nasi:'Nasi Putih', hewani:'Daging Sapi',   sayur:'Bayam Bening',    nabati:'Tahu Bacem',    buah:'Semangka' },
-      { nasi:'Nasi Putih', hewani:'Telur Balado',  sayur:'Tumis Kangkung',  nabati:'Tempe Mendoan', buah:'Pepaya' },
-      { nasi:'Nasi Putih', hewani:'Ayam Goreng',   sayur:'Sayur Asem',      nabati:'Tahu Goreng',   buah:'Melon' },
-      { nasi:'Nasi Putih', hewani:'Ikan Bakar',    sayur:'Tumis Buncis',    nabati:'Tempe Bacem',   buah:'Mangga' }
+      { nasi:'Nasi Putih', hewani:'Telur',          sayur:'Sayur Tumis',     nabati:'Tempe',          buah:'Pisang' },
+      { nasi:'Nasi Putih', hewani:'Ayam Bakar',     sayur:'Sop Sayur',       nabati:'Tahu',           buah:'Jeruk' },
+      { nasi:'Nasi Putih', hewani:'Ikan Goreng',    sayur:'Cap Cay',         nabati:'Tempe Goreng',   buah:'Apel' },
+      { nasi:'Nasi Kuning',hewani:'Daging Sapi',    sayur:'Bayam Bening',    nabati:'Tahu Bacem',     buah:'Semangka' },
+      { nasi:'Nasi Putih', hewani:'Telur Balado',   sayur:'Tumis Kangkung',  nabati:'Tempe Mendoan',  buah:'Pepaya' },
+      { nasi:'Nasi Putih', hewani:'Ayam Goreng',    sayur:'Sayur Asem',      nabati:'Tahu Goreng',    buah:'Melon' },
+      { nasi:'Nasi Putih', hewani:'Ikan Bakar',     sayur:'Tumis Buncis',    nabati:'Tempe Bacem',    buah:'Mangga' },
+      { nasi:'Nasi Putih', hewani:'Rendang',        sayur:'Sayur Lodeh',     nabati:'Tahu Isi',       buah:'Salak' },
+      { nasi:'Nasi Putih', hewani:'Telur Dadar',    sayur:'Tumis Wortel',    nabati:'Tempe Orek',     buah:'Anggur' },
+      { nasi:'Nasi Putih', hewani:'Ayam Suwir',     sayur:'Sup Jagung',      nabati:'Tahu Sutera',    buah:'Pir' }
     ];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today.getTime() - i * 86400000);
-      // Skip weekend (program MBG umumnya hari sekolah Senin-Jumat)
-      // tapi tetap masukkan beberapa weekend agar grafik kontinu
-      const m = menus[(days - 1 - i) % menus.length];
-      const tanggal = d.toISOString().slice(0,10);
+      const dayIdx = days - 1 - i;
+      const m = menus[dayIdx % menus.length];
+      const tanggal = d.toISOString().slice(0, 10);
       const porsi = 3000 + Math.round(Math.random() * 800);
+
+      // Buat 3 variasi: ~70% terserap baik, ~20% perlu evaluasi, ~10% serapan tinggi
+      const r = Math.random();
+      let factor;
+      if (r < 0.20) {
+        // Hari kurang baik (serapan ~60-78%, masuk Perlu Evaluasi)
+        factor = 0.22 + Math.random() * 0.16;
+      } else if (r < 0.85) {
+        // Hari normal (serapan ~80-92%)
+        factor = 0.08 + Math.random() * 0.12;
+      } else {
+        // Hari sangat baik (serapan >92%)
+        factor = 0.02 + Math.random() * 0.06;
+      }
+
+      const round1 = (n) => Math.round(n * 10) / 10;
       const rec = {
         tanggal, hari: U.dayName(tanggal), porsi,
         menu_nasi: m.nasi, menu_hewani: m.hewani, menu_sayur: m.sayur, menu_nabati: m.nabati, menu_buah: m.buah,
-        nasi_p: 200 + Math.random()*30,   nasi_s: 20 + Math.random()*20,
-        hewani_p: 140 + Math.random()*20, hewani_s: 12 + Math.random()*15,
-        sayur_p: 180 + Math.random()*30,  sayur_s: 22 + Math.random()*20,
-        nabati_p: 90 + Math.random()*15,  nabati_s: 8  + Math.random()*10,
-        buah_p:  120 + Math.random()*20,  buah_s:  10 + Math.random()*12
+        nasi_p:   round1(200 + Math.random() * 30),
+        hewani_p: round1(140 + Math.random() * 20),
+        sayur_p:  round1(180 + Math.random() * 30),
+        nabati_p: round1(90  + Math.random() * 15),
+        buah_p:   round1(120 + Math.random() * 20)
       };
-      // round 1 dec
-      ['nasi_p','nasi_s','hewani_p','hewani_s','sayur_p','sayur_s','nabati_p','nabati_s','buah_p','buah_s'].forEach(k => rec[k] = Math.round(rec[k]*10)/10);
+      // Sampah = pemakaian × factor (per item, dengan sedikit variasi)
+      rec.nasi_s   = round1(rec.nasi_p   * (factor + (Math.random() - 0.5) * 0.04));
+      rec.hewani_s = round1(rec.hewani_p * (factor + (Math.random() - 0.5) * 0.04));
+      rec.sayur_s  = round1(rec.sayur_p  * (factor + (Math.random() - 0.5) * 0.04));
+      rec.nabati_s = round1(rec.nabati_p * (factor + (Math.random() - 0.5) * 0.04));
+      rec.buah_s   = round1(rec.buah_p   * (factor + (Math.random() - 0.5) * 0.04));
+      // Pastikan tidak negatif
+      ['nasi_s','hewani_s','sayur_s','nabati_s','buah_s'].forEach(k => { if (rec[k] < 0) rec[k] = 0; });
+
       rec.id = U.uuid();
       rec.createdAt = Date.now();
       rows.push(rec);
@@ -203,7 +229,17 @@
     return rows.length;
   };
 
-  // Auto-seed dinonaktifkan: user input data sendiri.
-  // Fungsi loadSample() tetap tersedia bila user klik tombol di Pengaturan/Data.
-  S.autoSeedIfEmpty = function () { return false; };
+  // Auto-seed: muat 30 hari dummy data sekali saja saat aplikasi dibuka pertama kali.
+  // Pakai flag di localStorage agar tidak auto-muat ulang kalau user sengaja menghapus data.
+  S.autoSeedIfEmpty = function () {
+    const SEED_FLAG = 'mbg.autoSeeded.v2';
+    if (localStorage.getItem(SEED_FLAG)) return false;
+    if (S.getAll().length > 0) {
+      localStorage.setItem(SEED_FLAG, '1');
+      return false;
+    }
+    S.loadSample(30);
+    localStorage.setItem(SEED_FLAG, '1');
+    return true;
+  };
 })();

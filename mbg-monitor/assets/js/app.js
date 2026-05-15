@@ -33,11 +33,16 @@
   document.getElementById('whoRole').textContent = session.user.role || 'admin';
   document.getElementById('avatar').textContent = (session.user.username[0] || 'A').toUpperCase();
 
-  // Bersihkan auto-seed flag dari versi lama (sekali jalan) agar user yang
-  // sudah pernah login dengan data contoh bisa hapus & mulai dari kosong tanpa konflik.
+  // Bersihkan flag versi lama (sekali jalan) agar dummy data baru terload.
   if (localStorage.getItem('mbg.autoSeeded.v1')) {
     localStorage.removeItem('mbg.autoSeeded.v1');
   }
+  // Auto-seed 30 hari dummy data jika belum pernah seed dan data kosong.
+  try {
+    if (S.autoSeedIfEmpty()) {
+      setTimeout(() => U.toast('30 hari data contoh otomatis dimuat. Anda bisa edit/hapus kapan saja.', 'success'), 500);
+    }
+  } catch (e) { console.error('[autoSeed]', e); }
 
   // Theme button
   document.getElementById('btnTheme').addEventListener('click', () => {
