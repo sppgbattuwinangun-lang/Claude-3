@@ -1,0 +1,55 @@
+name: Deploy MBG Monitor to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permission diperlukan untuk auto-enable & deploy ke Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Hanya satu deployment yang berjalan pada satu waktu
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages (auto-enable)
+        uses: actions/configure-pages@v5
+        with:
+          # Auto-enable GitHub Pages bila belum aktif (butuh permission pages: write)
+          enablement: true
+
+      - name: Prepare site
+        run: |
+          # Copy isi mbg-monitor ke folder _site agar deploy sebagai root
+          mkdir -p _site
+          cp -r mbg-monitor/. _site/
+          # Pastikan .nojekyll ada
+          touch _site/.nojekyll
+          ls -la _site/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
