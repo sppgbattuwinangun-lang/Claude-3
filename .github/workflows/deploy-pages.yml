@@ -1,4 +1,4 @@
-name: Deploy MBG Monitor to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -25,23 +25,26 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Pages
-        id: pages
         uses: actions/configure-pages@v5
 
       - name: Build site
         run: |
           mkdir -p _site
-          # Copy semua file root yang relevan (index.html, .nojekyll)
-          cp -f index.html _site/index.html 2>/dev/null || true
-          cp -f .nojekyll _site/.nojekyll 2>/dev/null || true
-          # Copy folder mbg-monitor
-          cp -r mbg-monitor _site/mbg-monitor
-          # Pastikan .nojekyll ada di root site
-          touch _site/.nojekyll
+          # Copy semua file/folder yang relevan ke _site
+          cp -f index.html _site/
+          cp -f login.html _site/ 2>/dev/null || true
+          cp -f app.html _site/ 2>/dev/null || true
+          cp -f .nojekyll _site/ 2>/dev/null || touch _site/.nojekyll
+          cp -r assets _site/assets 2>/dev/null || true
+          # Optional README
+          cp -f README.md.mbg _site/README.md 2>/dev/null || true
+
           echo "=== Site contents ==="
           ls -la _site/
-          echo "=== mbg-monitor contents ==="
-          ls -la _site/mbg-monitor/
+          echo "=== Assets ==="
+          ls -la _site/assets/ 2>/dev/null
+          echo "=== JS files ==="
+          ls -la _site/assets/js/ 2>/dev/null
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
