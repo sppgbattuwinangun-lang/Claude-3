@@ -47,7 +47,9 @@
         return c[it.key + '_s'] ?? 0;
       });
       const id = 'chart_' + it.key;
-      const ctx = document.getElementById(id).getContext('2d');
+      const cv = document.getElementById(id);
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
       if (charts[id]) charts[id].destroy();
       charts[id] = new Chart(ctx, {
         data: {

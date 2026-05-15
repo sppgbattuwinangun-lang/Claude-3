@@ -149,6 +149,14 @@
   }
 
   I.render = function () {
+    try {
+      _render();
+    } catch (err) {
+      console.error('[input.render]', err);
+    }
+  };
+
+  function _render() {
     const settings = S.getSettings();
     let rows = S.getAll().map(r => S.compute(r, settings));
 
@@ -219,7 +227,7 @@
 
     // pagination control
     renderPagination(totalPages);
-  };
+  }
 
   function renderBadge(v) {
     if (!v) return '<span class="badge">—</span>';
@@ -351,32 +359,34 @@
   }
 
   function saveModal(addAnother) {
-    const rec = readForm();
-    if (!rec.tanggal) { U.toast('Tanggal wajib diisi', 'error'); return; }
-    if (rec.porsi === null || rec.porsi < 0) { U.toast('Jumlah porsi wajib diisi', 'error'); return; }
-    const isEdit = !!modalEditingId;
-    S.upsert(rec);
-    U.toast(isEdit ? 'Data diperbarui' : 'Data tersimpan', 'success');
-    if (addAnother && !isEdit) {
-      // Auto-fill: tanggal +1 hari, menu di-keep, angka direset
-      const next = new Date(rec.tanggal);
-      next.setDate(next.getDate() + 1);
-      const f = (sel) => document.getElementById(sel);
-      const nextISO = next.toISOString().slice(0,10);
-      // Reset form tapi keep menu names + tanggal jadi besok
-      modalEditingId = null;
-      f('modalTitle').textContent = 'Tambah Data — ' + U.fmtDate(nextISO);
-      f('btnDelete').classList.add('hidden');
-      f('fId').value = '';
-      f('fTanggal').value = nextISO;
-      f('fHari').value = U.dayName(nextISO);
-      // Menu names di-keep agar input cepat
-      // Reset porsi & semua angka
-      ['fPorsi','fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS'].forEach(id => f(id).value = '');
-      updateLivePreview();
-      f('fPorsi').focus();
-    } else {
-      closeModal();
+    try {
+      const rec = readForm();
+      if (!rec.tanggal) { U.toast('Tanggal wajib diisi', 'error'); return; }
+      if (rec.porsi === null || rec.porsi < 0) { U.toast('Jumlah porsi wajib diisi', 'error'); return; }
+      const isEdit = !!modalEditingId;
+      S.upsert(rec);
+      U.toast(isEdit ? 'Data diperbarui' : 'Data tersimpan', 'success');
+      if (addAnother && !isEdit) {
+        // Auto-fill: tanggal +1 hari, menu di-keep, angka direset
+        const next = new Date(rec.tanggal);
+        next.setDate(next.getDate() + 1);
+        const f = (sel) => document.getElementById(sel);
+        const nextISO = next.toISOString().slice(0, 10);
+        modalEditingId = null;
+        f('modalTitle').textContent = 'Tambah Data — ' + U.fmtDate(nextISO);
+        f('btnDelete').classList.add('hidden');
+        f('fId').value = '';
+        f('fTanggal').value = nextISO;
+        f('fHari').value = U.dayName(nextISO);
+        ['fPorsi','fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS'].forEach(id => f(id).value = '');
+        updateLivePreview();
+        try { f('fPorsi').focus(); } catch (e) {}
+      } else {
+        closeModal();
+      }
+    } catch (err) {
+      console.error('[saveModal]', err);
+      U.toast('Gagal menyimpan: ' + err.message, 'error');
     }
   }
 })();

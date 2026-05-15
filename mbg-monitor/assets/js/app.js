@@ -2,6 +2,18 @@
    App orchestrator
    ========================================================= */
 (function () {
+  // Global error handler — tampilkan pesan ke user, jangan biarkan layar putih
+  window.addEventListener('error', function (e) {
+    console.error('[MBG ERROR]', e.error || e.message, e);
+    try {
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:9999;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:12px 16px;border-radius:10px;max-width:520px;font:13px/1.4 -apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.15)';
+      t.innerHTML = '<b>Terjadi error:</b> ' + (e.message || String(e.error)) + '<br><small>Refresh halaman dengan Ctrl+Shift+R. Bila masih, kabari error ini.</small>';
+      document.body && document.body.appendChild(t);
+      setTimeout(() => t.remove(), 8000);
+    } catch (ex) {}
+  });
+
   const NS = (window.MBG = window.MBG || {});
   const U = NS.util, A = NS.auth, S = NS.store;
   const App = (NS.app = {});
@@ -119,9 +131,9 @@
     }, 800);
   };
   const reRender = (payload, msg) => {
-    NS.dashboard.render();
-    NS.input.render();
-    NS.charts.render();
+    try { NS.dashboard.render(); } catch (e) { console.error('[dashboard.render]', e); }
+    try { NS.input.render(); }     catch (e) { console.error('[input.render]', e); }
+    try { NS.charts.render(); }    catch (e) { console.error('[charts.render]', e); }
     flashLive();
     // Toast khusus untuk update dari tab lain
     if (msg && msg.payload && msg.payload.source === 'storage') {

@@ -129,7 +129,9 @@
   }
 
   function renderTrend(rows, settings) {
-    const ctx = document.getElementById('chartTrend').getContext('2d');
+    const cv = document.getElementById('chartTrend');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
     const labels = rows.map(r => U.fmtDate(r.tanggal));
     const usage = rows.map(r => S.compute(r, settings).total_p ?? 0);
     const waste = rows.map(r => S.compute(r, settings).total_s ?? 0);
@@ -182,7 +184,9 @@
   }
 
   function renderDonut(agg) {
-    const ctx = document.getElementById('chartDonut').getContext('2d');
+    const cv = document.getElementById('chartDonut');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
     const labels = S.ITEMS.map(i => i.label);
     const data = S.ITEMS.map(i => agg.perItem[i.key].s);
     const colors = S.ITEMS.map(i => i.color);
