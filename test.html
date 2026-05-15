@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Test Halaman MBG Monitor</title>
+  <style>
+    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; padding: 30px; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+    h1 { color: #16a34a; }
+    .ok { color: #16a34a; font-weight: bold; }
+    .err { color: #ef4444; font-weight: bold; }
+    .box { padding: 16px; border-radius: 10px; background: #f0fdf4; border: 2px solid #16a34a; margin: 12px 0; }
+    .box.error { background: #fef2f2; border-color: #ef4444; }
+    a { display: inline-block; padding: 12px 20px; background: #16a34a; color: white; text-decoration: none; border-radius: 8px; margin: 8px 4px; font-weight: 600; }
+    a:hover { background: #15803d; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+    ol { padding-left: 24px; }
+    ol li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>✅ Hosting Bekerja!</h1>
+  <p>Bila halaman ini muncul, artinya GitHub Pages sudah aktif dan file sudah ter-deploy dengan benar.</p>
+
+  <div class="box">
+    <strong>Status File Tes:</strong>
+    <ul id="status">
+      <li>Halaman test.html: <span class="ok">✓ OK (Anda lihat ini)</span></li>
+      <li id="cssCheck">CSS styles.css: <span>Memeriksa...</span></li>
+      <li id="jsCheck">JavaScript utils.js: <span>Memeriksa...</span></li>
+      <li id="loginCheck">login.html: <span>Memeriksa...</span></li>
+      <li id="appCheck">app.html: <span>Memeriksa...</span></li>
+    </ul>
+  </div>
+
+  <h2>Coba Akses Aplikasi</h2>
+  <p>
+    <a href="./login.html">Buka Halaman Login</a>
+    <a href="./index.html">Buka Halaman Utama</a>
+    <a href="./app.html">Buka Dashboard (jika sudah login)</a>
+  </p>
+
+  <h2>Bila Halaman Login/Dashboard Tetap Putih</h2>
+  <ol>
+    <li>Lakukan <strong>hard refresh</strong>: tekan <code>Ctrl+Shift+R</code> (Windows) atau <code>Cmd+Shift+R</code> (Mac)</li>
+    <li>Atau buka di tab <strong>Incognito/Private</strong>: <code>Ctrl+Shift+N</code></li>
+    <li>Atau hapus cache: F12 → Application → Clear Storage → Clear site data</li>
+    <li>Atau buka langsung URL ini di tab baru:
+      <ul>
+        <li><a href="https://sppgbattuwinangun-lang.github.io/Claude-3/login.html">https://sppgbattuwinangun-lang.github.io/Claude-3/login.html</a></li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Login Default</h2>
+  <p>Username: <code>admin</code> · Password: <code>admin123</code> (akan diminta ganti pada login pertama)</p>
+
+  <script>
+    // Tes apakah file lain bisa di-fetch
+    const baseUrl = location.href.replace(/\/test\.html.*$/, '/');
+
+    function check(id, url, label) {
+      fetch(url, { cache: 'no-store' })
+        .then(r => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.querySelector('span').textContent = r.ok
+            ? `✓ OK (HTTP ${r.status})`
+            : `✗ ERROR ${r.status}`;
+          el.querySelector('span').className = r.ok ? 'ok' : 'err';
+        })
+        .catch(e => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.querySelector('span').textContent = '✗ Tidak dapat diakses';
+            el.querySelector('span').className = 'err';
+          }
+        });
+    }
+
+    check('cssCheck', baseUrl + 'assets/css/styles.css');
+    check('jsCheck', baseUrl + 'assets/js/utils.js');
+    check('loginCheck', baseUrl + 'login.html');
+    check('appCheck', baseUrl + 'app.html');
+  </script>
+</body>
+</html>
