@@ -2,7 +2,7 @@
    App orchestrator
    ========================================================= */
 (function () {
-  // Global error handler — tampilkan pesan ke user, jangan biarkan layar putih
+  // Global error handler — tampilkan pesan ke user
   window.addEventListener('error', function (e) {
     console.error('[MBG ERROR]', e.error || e.message, e);
     try {
@@ -21,8 +21,6 @@
   // Auth guard
   const session = A.requireAuth();
   if (!session) return;
-
-  // Jika belum ganti password default, redirect ke login
   if (session.mustChangePassword) {
     location.replace('./login.html');
     return;
@@ -33,23 +31,12 @@
   document.getElementById('whoRole').textContent = session.user.role || 'admin';
   document.getElementById('avatar').textContent = (session.user.username[0] || 'A').toUpperCase();
 
-  // Bersihkan flag versi lama (sekali jalan) agar dummy data baru terload.
-  if (localStorage.getItem('mbg.autoSeeded.v1')) {
-    localStorage.removeItem('mbg.autoSeeded.v1');
-  }
-  // Auto-seed 30 hari dummy data jika belum pernah seed dan data kosong.
-  try {
-    if (S.autoSeedIfEmpty()) {
-      setTimeout(() => U.toast('30 hari data contoh otomatis dimuat. Anda bisa edit/hapus kapan saja.', 'success'), 500);
-    }
-  } catch (e) { console.error('[autoSeed]', e); }
-
   // Theme button
   document.getElementById('btnTheme').addEventListener('click', () => {
     U.toggleTheme();
-    // re-render charts to pick up colors that depend on theme
     if (NS.dashboard) NS.dashboard.render();
     if (NS.charts && document.getElementById('page-grafik').classList.contains('active')) NS.charts.render();
+    if (NS.pdf && document.getElementById('page-laporan').classList.contains('active')) NS.pdf.renderPreview();
   });
 
   // Logout
@@ -70,12 +57,12 @@
   });
 
   // Navigation
-  const PAGES = ['dashboard','input','grafik','data','panduan','settings'];
+  const PAGES = ['dashboard','input','grafik','laporan','panduan','settings'];
   const PAGE_TITLES = {
     dashboard: 'Dashboard',
     input: 'Input Harian',
     grafik: 'Grafik Per Item',
-    data: 'Data & Excel',
+    laporan: 'Laporan PDF',
     panduan: 'Panduan',
     settings: 'Pengaturan'
   };
@@ -91,10 +78,11 @@
     location.hash = '#' + page;
     sidebar.classList.remove('open'); mask.classList.remove('show');
 
-    // re-render on nav (charts need to be visible to size correctly)
+    // re-render on nav (charts perlu visible untuk size correctly)
     if (page === 'dashboard') NS.dashboard.render();
     if (page === 'input')     NS.input.render();
     if (page === 'grafik')    NS.charts.render();
+    if (page === 'laporan')   NS.pdf.renderPreview();
     if (page === 'settings')  NS.settings.renderUsers();
   };
 
@@ -102,12 +90,17 @@
     n.addEventListener('click', () => App.go(n.dataset.page));
   });
 
-  // Floating Action Button — buka modal tambah dari halaman manapun
+  // Tombol dengan data-go (mis. Buat Laporan PDF dari dashboard)
+  document.querySelectorAll('[data-go]').forEach(b => {
+    b.addEventListener('click', () => App.go(b.dataset.go));
+  });
+
+  // Floating Action Button
   const fab = document.getElementById('fab');
   if (fab) {
     fab.addEventListener('click', () => {
       App.go('input');
-      setTimeout(() => document.getElementById('btnAdd').click(), 50);
+      setTimeout(() => document.getElementById('btnAdd').click(), 80);
     });
   }
 
@@ -115,32 +108,29 @@
   NS.dashboard.init();
   NS.input.init();
   NS.charts.init();
+  if (NS.pdf && NS.pdf.init) NS.pdf.init();
   NS.settings.init();
 
-  // Initial page
+  // Initial page (dari hash)
   const hash = (location.hash || '').replace('#', '');
   App.go(PAGES.includes(hash) ? hash : 'dashboard');
 
-  // Real-time: listen to data/settings changes (from this tab or others)
+  // Real-time: re-render saat data/setting berubah
   let flashTimeout = null;
   const flashLive = () => {
     const liveEl = document.querySelector('.topbar .pulse');
     if (!liveEl) return;
-    liveEl.style.transition = 'background .3s, color .3s';
-    liveEl.style.background = 'linear-gradient(135deg, #16a34a, #0d9488)';
-    liveEl.style.color = 'white';
+    liveEl.style.transition = 'transform .3s';
+    liveEl.style.transform = 'scale(1.08)';
     clearTimeout(flashTimeout);
-    flashTimeout = setTimeout(() => {
-      liveEl.style.background = '';
-      liveEl.style.color = '';
-    }, 800);
+    flashTimeout = setTimeout(() => { liveEl.style.transform = ''; }, 600);
   };
   const reRender = (payload, msg) => {
     try { NS.dashboard.render(); } catch (e) { console.error('[dashboard.render]', e); }
     try { NS.input.render(); }     catch (e) { console.error('[input.render]', e); }
     try { NS.charts.render(); }    catch (e) { console.error('[charts.render]', e); }
+    try { NS.pdf.renderPreview(); } catch (e) { console.error('[pdf.renderPreview]', e); }
     flashLive();
-    // Toast khusus untuk update dari tab lain
     if (msg && msg.payload && msg.payload.source === 'storage') {
       U.toast('Data diperbarui dari tab/perangkat lain', 'info');
     }
@@ -150,22 +140,28 @@
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + N for add new
+    // Ctrl/Cmd + N = tambah data
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
       e.preventDefault();
       App.go('input');
-      document.getElementById('btnAdd').click();
+      const btn = document.getElementById('btnAdd');
+      if (btn) btn.click();
     }
-    // ESC closes modals
+    // Ctrl/Cmd + P = laporan
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      App.go('laporan');
+    }
+    // ESC tutup modal
     if (e.key === 'Escape') {
-      document.getElementById('modalMask').classList.remove('show');
-      document.getElementById('userMask').classList.remove('show');
+      document.querySelectorAll('.modal-mask.show').forEach(m => m.classList.remove('show'));
     }
   });
 
-  // Live status pulse
+  // Live status pulse — clock
   setInterval(() => {
     const liveEl = document.getElementById('liveStatus');
+    if (!liveEl) return;
     const t = new Date().toLocaleTimeString('id-ID');
     liveEl.textContent = 'Live · ' + t;
   }, 1000);

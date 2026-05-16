@@ -20,11 +20,13 @@
     });
     // Empty-state shortcuts
     const eAdd = document.getElementById('btnEmptyAdd');
-    const eImp = document.getElementById('btnEmptyImport');
     const eSmp = document.getElementById('btnEmptySample');
     if (eAdd) eAdd.addEventListener('click', () => { NS.app.go('input'); document.getElementById('btnAdd').click(); });
-    if (eImp) eImp.addEventListener('click', () => { NS.app.go('input'); document.getElementById('btnImport').click(); });
-    if (eSmp) eSmp.addEventListener('click', () => { document.getElementById('btnLoadSample').click(); });
+    if (eSmp) eSmp.addEventListener('click', () => {
+      const btn = document.getElementById('btnLoadSample');
+      if (btn) btn.click();
+      else { S.loadSample(30); U.toast('Data contoh dimuat (30 hari)', 'success'); }
+    });
     D.render();
   };
 
@@ -37,15 +39,32 @@
     const emptyEl = document.getElementById('emptyHint');
     if (emptyEl) emptyEl.style.display = rows.length === 0 ? 'flex' : 'none';
 
-    // KPIs
-    document.getElementById('kpiDays').textContent  = U.fmt(agg.total.days, { maximumFractionDigits: 0 });
-    document.getElementById('kpiUse').textContent   = U.fmt(agg.total.p, { maximumFractionDigits: 1 }) + ' kg';
-    document.getElementById('kpiWaste').textContent = U.fmt(agg.total.s, { maximumFractionDigits: 1 }) + ' kg';
-    document.getElementById('kpiAbsorb').textContent = agg.total.pctSerapan !== null ? U.pct(agg.total.pctSerapan, 1) : '—';
+    // KPIs (animated counters)
+    const E = NS.effects;
+    const setKpi = (id, value, opts) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (E && E.countTo) E.countTo(el, value, opts || {});
+      else el.textContent = value;
+    };
+    setKpi('kpiDays',  agg.total.days, { decimals: 0 });
+    setKpi('kpiUse',   agg.total.p || 0, { decimals: 1, suffix: ' kg' });
+    setKpi('kpiWaste', agg.total.s || 0, { decimals: 1, suffix: ' kg' });
+    const absorbEl = document.getElementById('kpiAbsorb');
+    if (absorbEl) {
+      if (agg.total.pctSerapan !== null) {
+        if (E && E.countTo) E.countTo(absorbEl, agg.total.pctSerapan * 100, { decimals: 1, suffix: '%' });
+        else absorbEl.textContent = U.pct(agg.total.pctSerapan, 1);
+      } else {
+        absorbEl.textContent = '—';
+      }
+    }
     const sub = document.getElementById('kpiAbsorbStatus');
-    sub.textContent = agg.total.status === 'Terserap'
-      ? `Terserap (≥ ${Math.round(settings.ambangSerapan*100)}%)`
-      : (agg.total.status === '—' ? 'Belum ada data' : `Perlu Evaluasi (< ${Math.round(settings.ambangSerapan*100)}%)`);
+    if (sub) {
+      sub.textContent = agg.total.status === 'Terserap'
+        ? `Terserap (≥ ${Math.round(settings.ambangSerapan*100)}%)`
+        : (agg.total.status === '—' ? 'Belum ada data' : `Perlu Evaluasi (< ${Math.round(settings.ambangSerapan*100)}%)`);
+    }
 
     // Item summary cards
     const grid = document.getElementById('itemSummaryGrid');

@@ -2,38 +2,26 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <title>Halaman Tidak Ditemukan — MBG Monitor</title>
-  <style>
-    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; display:grid; place-items:center; min-height:100vh; margin:0; background: linear-gradient(135deg,#16a34a,#0d9488); color:white; padding:20px; }
-    .card { background: rgba(255,255,255,.1); padding: 36px 44px; border-radius: 16px; text-align:center; border: 1px solid rgba(255,255,255,.2); max-width: 520px; backdrop-filter: blur(8px); }
-    h1 { margin: 0 0 8px; font-size: 56px; }
-    p { font-size: 15px; opacity: .9; margin: 8px 0; }
-    .btn { display: inline-block; padding: 12px 24px; background: white; color: #0d9488; border-radius: 10px; text-decoration: none; font-weight: 700; margin: 6px 4px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
-    .btn:hover { background: #f0fdf4; }
-    .small { font-size: 12px; opacity: .8; margin-top: 16px; }
-    code { background: rgba(0,0,0,.2); padding: 2px 8px; border-radius: 4px; font-size: 13px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>404 — MBG Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260516" />
 </head>
-<body>
-  <div class="card">
-    <h1>404</h1>
-    <p><b>Halaman tidak ditemukan.</b></p>
-    <p>URL yang Anda buka mungkin sudah pindah lokasi. Klik tombol di bawah untuk ke halaman yang benar:</p>
-    <p style="margin-top:20px;">
-      <a class="btn" href="/Claude-3/">🏠 Halaman Utama</a>
-      <a class="btn" href="/Claude-3/login.html">🔐 Login</a>
-      <a class="btn" href="/Claude-3/test.html">🩺 Diagnose</a>
-      <a class="btn" href="/Claude-3/mbg.html">⚡ App Standalone</a>
-    </p>
-    <p class="small">URL yang dicoba: <code id="url"></code></p>
+<body class="boot-screen">
+  <div class="bg-grid"></div>
+  <div class="boot-card" style="max-width: 480px;">
+    <div style="font-size: 90px; font-weight: 800; line-height: 1; margin: 0 0 8px 0;" class="gradient-text">404</div>
+    <h2 style="margin: 0 0 8px; font-size: 18px;">Halaman tidak ditemukan</h2>
+    <p>URL yang Anda buka mungkin sudah pindah lokasi atau tidak tersedia.</p>
+    <div style="display:flex; gap:8px; justify-content:center; margin-top: 20px; flex-wrap:wrap;">
+      <a class="btn btn-primary" href="./">Halaman Utama</a>
+      <a class="btn" href="./login.html">Login</a>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:18px;">URL: <code id="url" style="background:var(--bg-glass);padding:2px 8px;border-radius:6px;"></code></p>
   </div>
   <script>
     document.getElementById('url').textContent = location.pathname;
-    // Jika URL mengandung 'mbg-monitor/' (struktur lama), redirect otomatis ke versi baru tanpa folder itu
-    if (location.pathname.includes('/mbg-monitor/')) {
-      const newPath = location.pathname.replace('/mbg-monitor/', '/');
-      setTimeout(() => location.replace(newPath), 1500);
-    }
   </script>
 </body>
 </html>

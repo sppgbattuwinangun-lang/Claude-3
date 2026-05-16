@@ -229,17 +229,30 @@
     return rows.length;
   };
 
-  // Auto-seed: muat 30 hari dummy data sekali saja saat aplikasi dibuka pertama kali.
-  // Pakai flag di localStorage agar tidak auto-muat ulang kalau user sengaja menghapus data.
+  // Auto-seed dimatikan: aplikasi tidak lagi memuat data contoh otomatis.
+  // User input data secara manual lewat form. Fungsi loadSample() tetap tersedia
+  // jika sewaktu-waktu admin ingin mencoba dengan data dummy.
   S.autoSeedIfEmpty = function () {
-    const SEED_FLAG = 'mbg.autoSeeded.v2';
-    if (localStorage.getItem(SEED_FLAG)) return false;
-    if (S.getAll().length > 0) {
-      localStorage.setItem(SEED_FLAG, '1');
-      return false;
-    }
-    S.loadSample(30);
-    localStorage.setItem(SEED_FLAG, '1');
-    return true;
+    return false;
+  };
+
+  // Filter records berdasarkan rentang tanggal (inklusif). Format: ISO 'YYYY-MM-DD'.
+  S.filterByRange = function (rows, from, to) {
+    rows = rows || S.getAll();
+    return rows.filter(r => {
+      const d = String(r.tanggal || '');
+      if (!d) return false;
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+  };
+
+  // Helper: dapatkan rentang tanggal min/max dari semua data
+  S.getDateRange = function () {
+    const rows = S.getAll();
+    if (!rows.length) return { min: null, max: null };
+    const dates = rows.map(r => r.tanggal).filter(Boolean).sort();
+    return { min: dates[0], max: dates[dates.length - 1] };
   };
 })();

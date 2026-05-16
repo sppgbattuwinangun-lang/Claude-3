@@ -2,21 +2,25 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MBG Monitor — Memuat…</title>
-  <meta http-equiv="refresh" content="0; url=./login.html" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=1778879456" />
+  <meta http-equiv="refresh" content="1; url=./login.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260516" />
 </head>
 <body class="boot-screen">
+  <div class="bg-grid"></div>
   <div class="boot-card">
     <div class="boot-spinner"></div>
+    <h2 class="gradient-text" style="margin:0 0 8px 0;font-size:22px;font-weight:700">MBG Monitor</h2>
     <p>Mengarahkan ke halaman login…</p>
     <a href="./login.html">Klik di sini bila tidak otomatis berpindah</a>
   </div>
   <script>
-    // Jika sudah login, langsung ke dashboard
     try {
       const session = JSON.parse(localStorage.getItem('mbg.session') || 'null');
-      if (session && session.user && session.expires > Date.now()) {
+      if (session && session.user && session.expires > Date.now() && !session.mustChangePassword) {
         location.replace('./app.html');
       } else {
         location.replace('./login.html');

@@ -3,7 +3,7 @@
    ========================================================= */
 (function () {
   const NS = (window.MBG = window.MBG || {});
-  const U = NS.util, S = NS.store, X = NS.excel;
+  const U = NS.util, S = NS.store;
   const I = (NS.input = {});
 
   const COLS = [
@@ -98,54 +98,23 @@
     const psEl = document.getElementById('pageSize');
     if (psEl) psEl.addEventListener('change', (e) => { pageSize = parseInt(e.target.value, 10) || 25; page = 1; I.render(); });
 
-    document.getElementById('btnAdd').addEventListener('click', () => openModal(null));
-    document.getElementById('btnQuickAdd').addEventListener('click', () => {
-      NS.app.go('input'); openModal(null);
-    });
-
-    document.getElementById('btnExport').addEventListener('click', () => exportCurrent());
-    document.getElementById('btnExport2').addEventListener('click', () => exportCurrent());
-    document.getElementById('btnExportCsv').addEventListener('click', () => X.exportCsv(S.getAll(), S.getSettings()));
-    document.getElementById('btnExportJson').addEventListener('click', () => X.exportJson(S.getAll()));
-
-    document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
-    document.getElementById('btnImport2').addEventListener('click', () => document.getElementById('fileImport2').click());
-    document.getElementById('fileImport').addEventListener('change', handleImport);
-    document.getElementById('fileImport2').addEventListener('change', handleImport);
-
-    document.getElementById('btnLoadSample').addEventListener('click', () => {
-      if (S.getAll().length && !confirm('Ini akan menambahkan data contoh ke catatan saat ini. Lanjut?')) return;
-      S.loadSample();
-      U.toast('Data contoh dimuat', 'success');
-    });
-    document.getElementById('btnReset').addEventListener('click', () => {
+    on('btnAdd',       'click', () => openModal(null));
+    on('btnQuickAdd',  'click', () => { NS.app.go('input'); openModal(null); });
+    on('btnReset',     'click', () => {
       if (!confirm('Hapus SEMUA data? Tindakan ini tidak dapat dibatalkan.')) return;
       S.removeAll();
       U.toast('Semua data dihapus', 'warn');
     });
-    document.getElementById('btnExportPdf').addEventListener('click', () => window.print());
-  }
-
-  function exportCurrent() {
-    const rows = S.getAll();
-    if (!rows.length) { U.toast('Belum ada data untuk diekspor', 'warn'); return; }
-    X.exportXlsx(rows, S.getSettings());
-    U.toast('Excel berhasil diunduh', 'success');
-  }
-
-  function handleImport(e) {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    U.toast('Memproses file…', 'info');
-    X.importFile(file).then(res => {
-      const rows = S.getAll().concat(res.rows);
-      S.saveAll(rows);
-      U.toast(`Berhasil import ${res.count} baris dari sheet "${res.sheetName}"`, 'success');
-    }).catch(err => {
-      console.error(err);
-      U.toast('Gagal import: ' + err.message, 'error');
+    on('btnLoadSample', 'click', () => {
+      if (S.getAll().length && !confirm('Ini akan menambahkan data contoh ke catatan saat ini. Lanjut?')) return;
+      S.loadSample();
+      U.toast('Data contoh dimuat', 'success');
     });
+  }
+
+  function on(id, evt, fn) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(evt, fn);
   }
 
   I.render = function () {
