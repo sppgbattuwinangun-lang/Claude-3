@@ -1,21 +1,22 @@
 /* =========================================================
    PDF Report — Generate laporan PDF dengan filter rentang waktu
-   Menggunakan jsPDF + autotable + Chart.js (canvas to image)
    ========================================================= */
 (function () {
   const NS = (window.MBG = window.MBG || {});
   const U = NS.util, S = NS.store;
   const P = (NS.pdf = {});
 
-  // Modul-level chart instances (untuk render preview di halaman laporan)
   let previewTrend = null, previewDonut = null, previewBars = null;
   let currentRange = { from: null, to: null };
 
-  // ---------- Init UI ----------
   P.init = function () {
+    if (!document.getElementById('rFrom')) {
+      // Halaman laporan tidak ada — skip
+      return;
+    }
     bindRangeBar();
     bindReportActions();
-    setQuickRange('30'); // default 30 hari
+    setQuickRange('30');
     P.renderPreview();
   };
 
@@ -23,8 +24,8 @@
   function bindRangeBar() {
     const fromEl = document.getElementById('rFrom');
     const toEl   = document.getElementById('rTo');
-    fromEl.addEventListener('change', () => { currentRange.from = fromEl.value; clearActiveQuick(); P.renderPreview(); });
-    toEl.addEventListener('change',   () => { currentRange.to   = toEl.value;   clearActiveQuick(); P.renderPreview(); });
+    if (fromEl) fromEl.addEventListener('change', () => { currentRange.from = fromEl.value; clearActiveQuick(); P.renderPreview(); });
+    if (toEl)   toEl.addEventListener('change',   () => { currentRange.to   = toEl.value;   clearActiveQuick(); P.renderPreview(); });
 
     document.querySelectorAll('.q-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -38,13 +39,11 @@
 
   function clearActiveQuick() {
     document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
-    const custom = document.querySelector('.q-btn[data-range="custom"]');
-    if (custom) custom.classList.add('active');
   }
 
   function setQuickRange(range) {
     const today = new Date();
-    const toISO = today.toISOString().slice(0, 10);
+    const toISO = isoOf(today);
     let fromISO = null;
     if (range === 'all') {
       const all = S.getAll();
@@ -55,21 +54,17 @@
         fromISO = toISO;
       }
     } else if (range === 'month') {
-      // bulan berjalan: tanggal 1 sampai hari ini
       fromISO = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-01';
     } else if (range === 'lastmonth') {
       const lm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       const lme = new Date(today.getFullYear(), today.getMonth(), 0);
-      fromISO = isoOf(lm);
-      currentRange.from = fromISO;
+      currentRange.from = isoOf(lm);
       currentRange.to   = isoOf(lme);
-      document.getElementById('rFrom').value = currentRange.from;
-      document.getElementById('rTo').value   = currentRange.to;
-      // Highlight active button
+      const f = document.getElementById('rFrom'); if (f) f.value = currentRange.from;
+      const t = document.getElementById('rTo');   if (t) t.value = currentRange.to;
       document.querySelectorAll('.q-btn').forEach(b => b.classList.toggle('active', b.dataset.range === 'lastmonth'));
       return;
     } else if (range === 'custom') {
-      // do nothing — keep current
       return;
     } else {
       const days = parseInt(range, 10) || 30;
@@ -78,9 +73,8 @@
     }
     currentRange.from = fromISO;
     currentRange.to   = toISO;
-    document.getElementById('rFrom').value = fromISO;
-    document.getElementById('rTo').value   = toISO;
-    // Highlight active button
+    const f = document.getElementById('rFrom'); if (f) f.value = fromISO;
+    const t = document.getElementById('rTo');   if (t) t.value = toISO;
     document.querySelectorAll('.q-btn').forEach(b => b.classList.toggle('active', b.dataset.range === range));
   }
 
@@ -88,7 +82,6 @@
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
-  // ---------- Filtering ----------
   function filteredRows() {
     const all = S.getAll().slice().sort((a,b) => String(a.tanggal||'').localeCompare(String(b.tanggal||'')));
     const f = currentRange.from, t = currentRange.to;
@@ -101,24 +94,22 @@
     });
   }
 
-  // ---------- Render Preview Section ----------
+  // ---------- Preview ----------
   P.renderPreview = function () {
+    if (!document.getElementById('rFrom')) return;
     const rows = filteredRows();
     const settings = S.getSettings();
     const agg = S.aggregate(rows, settings);
 
-    // Update counter
     const cEl = document.getElementById('rCount');
     if (cEl) cEl.textContent = rows.length + ' baris terpilih';
 
-    // KPI preview
     setVal('rkDays',  rows.length, 0);
     setVal('rkUse',   agg.total.p || 0, 1, ' kg');
     setVal('rkWaste', agg.total.s || 0, 1, ' kg');
     const sEl = document.getElementById('rkAbsorb');
     if (sEl) sEl.textContent = agg.total.pctSerapan !== null ? U.pct(agg.total.pctSerapan, 1) : '—';
 
-    // Item ringkas
     const summaryEl = document.getElementById('reportItemSummary');
     if (summaryEl) {
       summaryEl.innerHTML = '';
@@ -146,8 +137,6 @@
         `);
       });
     }
-
-    // Charts preview
     renderPreviewCharts(rows, agg, settings);
   };
 
@@ -170,14 +159,14 @@
   }
 
   function renderPreviewCharts(rows, agg, settings) {
+    if (typeof Chart === 'undefined') return;
     const labels = rows.map(r => U.fmtDate(r.tanggal));
     const usage  = rows.map(r => S.compute(r, settings).total_p ?? 0);
     const waste  = rows.map(r => S.compute(r, settings).total_s ?? 0);
 
-    // Trend (line+bar combo)
     const tcv = document.getElementById('reportTrend');
     if (tcv) {
-      if (previewTrend) previewTrend.destroy();
+      try { if (previewTrend) previewTrend.destroy(); } catch (e) {}
       previewTrend = new Chart(tcv.getContext('2d'), {
         data: {
           labels,
@@ -200,11 +189,9 @@
         }
       });
     }
-
-    // Donut komposisi sampah per item
     const dcv = document.getElementById('reportDonut');
     if (dcv) {
-      if (previewDonut) previewDonut.destroy();
+      try { if (previewDonut) previewDonut.destroy(); } catch (e) {}
       previewDonut = new Chart(dcv.getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -217,11 +204,9 @@
         }
       });
     }
-
-    // Bar comparison per item: pemakaian vs sampah
     const bcv = document.getElementById('reportBars');
     if (bcv) {
-      if (previewBars) previewBars.destroy();
+      try { if (previewBars) previewBars.destroy(); } catch (e) {}
       previewBars = new Chart(bcv.getContext('2d'), {
         type: 'bar',
         data: {
@@ -243,14 +228,12 @@
     }
   }
 
-  // ---------- Generate Charts for PDF (offscreen, opaque background) ----------
-  // Rendering chart yang sama tapi dengan background putih untuk PDF.
-  function renderChartToImage(type, config, width, height) {
+  // ---------- Generate offscreen chart image for PDF ----------
+  function renderChartToImage(config, width, height) {
     return new Promise(resolve => {
       const cv = document.createElement('canvas');
       cv.width = width;
       cv.height = height;
-      // Solid white background plugin
       const bgPlugin = {
         id: 'whitebg',
         beforeDraw: (chart) => {
@@ -262,7 +245,6 @@
           ctx.restore();
         }
       };
-      // Override colors to dark for PDF
       const darkText = '#1f2937';
       const lightGrid = 'rgba(15,23,42,.1)';
       function patchColors(cfg) {
@@ -287,7 +269,6 @@
       const finalCfg = patchColors(config);
       finalCfg.plugins = [bgPlugin];
       const chart = new Chart(cv.getContext('2d'), finalCfg);
-      // Render frame
       requestAnimationFrame(() => {
         const url = cv.toDataURL('image/png', 1.0);
         chart.destroy();
@@ -296,26 +277,29 @@
     });
   }
 
-  // ---------- Bind Action Buttons ----------
   function bindReportActions() {
-    document.getElementById('btnGenPdf').addEventListener('click', () => {
+    const gen = document.getElementById('btnGenPdf');
+    if (gen) gen.addEventListener('click', () => {
       P.generate().catch(err => {
         console.error(err);
         U.toast('Gagal membuat PDF: ' + err.message, 'error');
       });
     });
-    document.getElementById('btnPrintReport').addEventListener('click', () => {
-      window.print();
-    });
+    const pr = document.getElementById('btnPrintReport');
+    if (pr) pr.addEventListener('click', () => window.print());
   }
 
   // ---------- Generate PDF ----------
   P.generate = async function () {
     if (!window.jspdf || !window.jspdf.jsPDF) {
-      U.toast('Library PDF belum termuat. Coba lagi.', 'error');
+      U.toast('Library PDF belum termuat. Cek koneksi internet & refresh.', 'error');
       return;
     }
     const { jsPDF } = window.jspdf;
+    if (typeof Chart === 'undefined') {
+      U.toast('Library Chart belum termuat. Cek koneksi internet & refresh.', 'error');
+      return;
+    }
 
     const rows = filteredRows();
     if (!rows.length) {
@@ -332,48 +316,38 @@
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 36;
 
-    // ---------- COVER ----------
     drawCover(doc, pageW, pageH, rows, agg, settings);
 
-    // ---------- KPI + Item Summary ----------
     doc.addPage();
     let y = drawHeader(doc, pageW, margin, 'Ringkasan Eksekutif');
     y = drawKpiBlock(doc, pageW, margin, y, rows, agg, settings);
     y = drawItemSummary(doc, pageW, margin, y, agg, settings);
-    drawFooter(doc, pageW, pageH);
 
-    // ---------- Charts ----------
     doc.addPage();
     y = drawHeader(doc, pageW, margin, 'Grafik Analisis');
     y = await drawCharts(doc, pageW, pageH, margin, y, rows, agg, settings);
-    drawFooter(doc, pageW, pageH);
 
-    // ---------- Detail Table ----------
     doc.addPage();
     drawHeader(doc, pageW, margin, 'Tabel Detail Harian');
     drawDetailTable(doc, pageW, margin, rows, settings);
-    // autoTable manages its own pages and footer; add footer to last
+
     drawFooter(doc, pageW, pageH);
 
-    // Save
-    const stamp = currentRange.from + '_sd_' + currentRange.to;
+    const stamp = (currentRange.from || 'awal') + '_sd_' + (currentRange.to || 'akhir');
     doc.save('Laporan_MBG_' + stamp + '.pdf');
     U.toast('PDF berhasil dibuat', 'success');
   };
 
   // ---------- Cover Page ----------
   function drawCover(doc, pageW, pageH, rows, agg, settings) {
-    // Gradient background
     drawGradientRect(doc, 0, 0, pageW, pageH, [99, 102, 241], [236, 72, 153]);
 
-    // Decorative circles
     doc.setFillColor(255, 255, 255);
     doc.setGState(new doc.GState({ opacity: 0.08 }));
     doc.circle(pageW - 80, 100, 130, 'F');
     doc.circle(60, pageH - 120, 90, 'F');
     doc.setGState(new doc.GState({ opacity: 1 }));
 
-    // Logo box
     doc.setFillColor(255, 255, 255);
     doc.setGState(new doc.GState({ opacity: 0.15 }));
     doc.roundedRect(pageW/2 - 36, 130, 72, 72, 14, 14, 'F');
@@ -383,20 +357,17 @@
     doc.setFontSize(38);
     doc.text('M', pageW/2, 182, { align: 'center' });
 
-    // Title
     doc.setFontSize(28);
     doc.text('LAPORAN MONITORING', pageW/2, 250, { align: 'center' });
     doc.setFontSize(20);
     doc.text('Sampah Pasca Distribusi MBG', pageW/2, 280, { align: 'center' });
 
-    // Subtitle line
     doc.setDrawColor(255, 255, 255);
     doc.setGState(new doc.GState({ opacity: 0.4 }));
     doc.setLineWidth(1);
     doc.line(pageW/2 - 80, 300, pageW/2 + 80, 300);
     doc.setGState(new doc.GState({ opacity: 1 }));
 
-    // Period
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.text('Periode Pelaporan', pageW/2, 330, { align: 'center' });
@@ -405,7 +376,6 @@
     const periode = U.fmtDate(currentRange.from) + '  s.d.  ' + U.fmtDate(currentRange.to);
     doc.text(periode, pageW/2, 354, { align: 'center' });
 
-    // Highlight stats card
     const cardY = 400;
     const cardW = pageW - 120;
     doc.setFillColor(255, 255, 255);
@@ -413,7 +383,6 @@
     doc.roundedRect(60, cardY, cardW, 180, 16, 16, 'F');
     doc.setGState(new doc.GState({ opacity: 1 }));
 
-    // Card content
     doc.setTextColor(50, 50, 60);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
@@ -427,17 +396,14 @@
     const pctText = agg.total.pctSerapan !== null ? (agg.total.pctSerapan * 100).toFixed(1) + '%' : '—';
     drawCoverStat(doc, bx + cw,   by + 60, cw, '% Serapan Total',     pctText, '');
 
-    // Status pill
-    const statusText = agg.total.status || '—';
     const isOk = agg.total.status === 'Terserap';
     doc.setFillColor(isOk ? 16 : 245, isOk ? 185 : 158, isOk ? 129 : 11);
     doc.roundedRect(pageW/2 - 70, cardY + 200, 140, 28, 14, 14, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text(statusText.toUpperCase(), pageW/2, cardY + 218, { align: 'center' });
+    doc.text((agg.total.status || '—').toUpperCase(), pageW/2, cardY + 218, { align: 'center' });
 
-    // Footer org
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
@@ -465,9 +431,7 @@
     }
   }
 
-  // ---------- Header on regular pages ----------
   function drawHeader(doc, pageW, margin, sectionTitle) {
-    // Gradient bar at top
     drawGradientRect(doc, 0, 0, pageW, 50, [99, 102, 241], [236, 72, 153]);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
@@ -476,29 +440,24 @@
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setGState(new doc.GState({ opacity: 0.85 }));
-    doc.text('Laporan Monitoring Sampah · ' + U.fmtDate(currentRange.from) + ' – ' + U.fmtDate(currentRange.to),
+    doc.text('Laporan · ' + U.fmtDate(currentRange.from) + ' – ' + U.fmtDate(currentRange.to),
              pageW - margin, 30, { align: 'right' });
     doc.setGState(new doc.GState({ opacity: 1 }));
 
-    // Section title
     doc.setTextColor(30, 30, 50);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     doc.text(sectionTitle, margin, 90);
-    // Underline
     doc.setDrawColor(168, 139, 250);
     doc.setLineWidth(2);
     doc.line(margin, 96, margin + 50, 96);
-
-    return 120; // y for content start
+    return 120;
   }
 
   function drawFooter(doc, pageW, pageH) {
-    const totalPages = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
+    const total = doc.internal.getNumberOfPages();
+    for (let i = 2; i <= total; i++) {
       doc.setPage(i);
-      // Skip cover page (page 1)
-      if (i === 1) continue;
       doc.setDrawColor(220, 220, 230);
       doc.setLineWidth(0.5);
       doc.line(36, pageH - 36, pageW - 36, pageH - 36);
@@ -506,41 +465,35 @@
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.text('Dibuat oleh MBG Monitor · ' + new Date().toLocaleDateString('id-ID'), 36, pageH - 22);
-      doc.text('Halaman ' + i + ' dari ' + totalPages, pageW - 36, pageH - 22, { align: 'right' });
+      doc.text('Halaman ' + i + ' dari ' + total, pageW - 36, pageH - 22, { align: 'right' });
     }
   }
 
-  // ---------- KPI block ----------
   function drawKpiBlock(doc, pageW, margin, y, rows, agg, settings) {
     const w = (pageW - margin*2 - 30) / 4;
     const h = 80;
     const items = [
-      { label: 'Hari Tercatat',    value: String(agg.total.days), color: [56, 189, 248] },
-      { label: 'Total Pemakaian',  value: U.fmt(agg.total.p, {maximumFractionDigits:1}) + ' kg', color: [16, 185, 129] },
-      { label: 'Total Sampah',     value: U.fmt(agg.total.s, {maximumFractionDigits:1}) + ' kg', color: [245, 158, 11] },
-      { label: '% Serapan Total',  value: agg.total.pctSerapan !== null ? (agg.total.pctSerapan * 100).toFixed(1) + '%' : '—', color: [236, 72, 153] }
+      { label: 'Hari Tercatat',   value: String(agg.total.days), color: [56, 189, 248] },
+      { label: 'Total Pemakaian', value: U.fmt(agg.total.p, {maximumFractionDigits:1}) + ' kg', color: [16, 185, 129] },
+      { label: 'Total Sampah',    value: U.fmt(agg.total.s, {maximumFractionDigits:1}) + ' kg', color: [245, 158, 11] },
+      { label: '% Serapan Total', value: agg.total.pctSerapan !== null ? (agg.total.pctSerapan * 100).toFixed(1) + '%' : '—', color: [236, 72, 153] }
     ];
     items.forEach((it, i) => {
       const x = margin + i * (w + 10);
-      // Card
       doc.setFillColor(248, 249, 252);
       doc.roundedRect(x, y, w, h, 10, 10, 'F');
-      // Top accent bar
       doc.setFillColor(it.color[0], it.color[1], it.color[2]);
       doc.roundedRect(x, y, w, 4, 2, 2, 'F');
-      // Label
       doc.setTextColor(110, 110, 130);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.text(it.label.toUpperCase(), x + 12, y + 22);
-      // Value
       doc.setTextColor(20, 20, 40);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
       doc.text(it.value, x + 12, y + 50);
     });
 
-    // Status badge below kpis
     const statusY = y + h + 16;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
@@ -554,7 +507,6 @@
     doc.setFontSize(10);
     doc.text((agg.total.status || '—').toUpperCase(), margin + 190, statusY + 15, { align: 'center' });
 
-    // Threshold info
     doc.setTextColor(120, 120, 140);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
@@ -563,7 +515,6 @@
     return statusY + 40;
   }
 
-  // ---------- Item summary table ----------
   function drawItemSummary(doc, pageW, margin, y, agg, settings) {
     doc.setTextColor(30, 30, 50);
     doc.setFont('helvetica', 'bold');
@@ -611,9 +562,7 @@
     return doc.lastAutoTable.finalY + 10;
   }
 
-  // ---------- Charts page ----------
   async function drawCharts(doc, pageW, pageH, margin, y, rows, agg, settings) {
-    // Trend chart full width
     const labels = rows.map(r => U.fmtDate(r.tanggal));
     const usage  = rows.map(r => S.compute(r, settings).total_p ?? 0);
     const waste  = rows.map(r => S.compute(r, settings).total_s ?? 0);
@@ -623,7 +572,7 @@
     doc.setFontSize(11);
     doc.text('Tren Harian: Pemakaian vs Sampah', margin, y);
 
-    const trendImg = await renderChartToImage('combo', {
+    const trendImg = await renderChartToImage({
       data: {
         labels,
         datasets: [
@@ -641,7 +590,6 @@
     doc.addImage(trendImg.url, 'PNG', margin, y + 10, trendW, trendH);
     y = y + 10 + trendH + 16;
 
-    // Two charts side by side: Donut + Bar comparison
     const half = (pageW - margin*2 - 16) / 2;
     doc.setTextColor(30, 30, 50);
     doc.setFont('helvetica', 'bold');
@@ -649,13 +597,13 @@
     doc.text('Komposisi Sampah', margin, y);
     doc.text('Pemakaian vs Sampah Per Item', margin + half + 16, y);
 
-    const donutImg = await renderChartToImage('doughnut', {
+    const donutImg = await renderChartToImage({
       type: 'doughnut',
       data: { labels: S.ITEMS.map(i => i.label), datasets: [{ data: S.ITEMS.map(i => agg.perItem[i.key].s), backgroundColor: S.ITEMS.map(i => i.color), borderWidth: 0 }] },
       options: { plugins: { legend: { position: 'bottom' } }, cutout: '55%' }
     }, 600, 500);
 
-    const barImg = await renderChartToImage('bar', {
+    const barImg = await renderChartToImage({
       type: 'bar',
       data: {
         labels: S.ITEMS.map(i => i.label),
@@ -676,7 +624,6 @@
     return y + 10 + useH + 16;
   }
 
-  // ---------- Detail Table ----------
   function drawDetailTable(doc, pageW, margin, rows, settings) {
     const head = [[
       'No', 'Tanggal', 'Hari', 'Porsi',
@@ -734,8 +681,6 @@
     return Number(v).toLocaleString('id-ID', { maximumFractionDigits: 1 });
   }
 
-  // ---------- Gradient rectangle (for cover/header) ----------
-  // jsPDF tidak support gradient native; kita simulasikan dengan banyak strip horizontal.
   function drawGradientRect(doc, x, y, w, h, c1, c2) {
     const steps = 40;
     for (let i = 0; i < steps; i++) {

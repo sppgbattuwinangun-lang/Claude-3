@@ -1,5 +1,5 @@
 /* =========================================================
-   Input Harian — tabel CRUD + filter/search/sort + modal
+   Input Harian — tabel CRUD + filter/search/sort + modal (defensive)
    ========================================================= */
 (function () {
   const NS = (window.MBG = window.MBG || {});
@@ -54,6 +54,7 @@
   let filterText = '', filterStatus = '__all__', filterMonth = '';
 
   I.init = function () {
+    if (!document.getElementById('dataHead')) return;
     renderHead();
     bindToolbar();
     bindModal();
@@ -62,6 +63,7 @@
 
   function renderHead() {
     const head = document.getElementById('dataHead');
+    if (!head) return;
     const tr = document.createElement('tr');
     COLS.forEach(c => {
       const th = document.createElement('th');
@@ -86,29 +88,21 @@
   }
 
   function bindToolbar() {
-    document.getElementById('tableSearch').addEventListener('input', (e) => {
-      filterText = e.target.value.toLowerCase(); page = 1; I.render();
-    });
-    document.getElementById('filterStatus').addEventListener('change', (e) => {
-      filterStatus = e.target.value; page = 1; I.render();
-    });
-    document.getElementById('filterMonth').addEventListener('change', (e) => {
-      filterMonth = e.target.value; page = 1; I.render();
-    });
-    const psEl = document.getElementById('pageSize');
-    if (psEl) psEl.addEventListener('change', (e) => { pageSize = parseInt(e.target.value, 10) || 25; page = 1; I.render(); });
+    onChange('tableSearch', 'input', (e) => { filterText = e.target.value.toLowerCase(); page = 1; I.render(); });
+    onChange('filterStatus', 'change', (e) => { filterStatus = e.target.value; page = 1; I.render(); });
+    onChange('filterMonth',  'change', (e) => { filterMonth  = e.target.value; page = 1; I.render(); });
+    onChange('pageSize',     'change', (e) => { pageSize = parseInt(e.target.value, 10) || 25; page = 1; I.render(); });
 
     on('btnAdd',       'click', () => openModal(null));
-    on('btnQuickAdd',  'click', () => { NS.app.go('input'); openModal(null); });
+    on('btnQuickAdd',  'click', () => { if (NS.app) NS.app.go('input'); openModal(null); });
     on('btnReset',     'click', () => {
       if (!confirm('Hapus SEMUA data? Tindakan ini tidak dapat dibatalkan.')) return;
       S.removeAll();
       U.toast('Semua data dihapus', 'warn');
     });
     on('btnLoadSample', 'click', () => {
-      if (S.getAll().length && !confirm('Ini akan menambahkan data contoh ke catatan saat ini. Lanjut?')) return;
-      S.loadSample();
-      U.toast('Data contoh dimuat', 'success');
+      S.loadSample(1);
+      U.toast('Data contoh 1 hari ditambahkan', 'success');
     });
   }
 
@@ -116,32 +110,26 @@
     const el = document.getElementById(id);
     if (el) el.addEventListener(evt, fn);
   }
+  function onChange(id, evt, fn) { on(id, evt, fn); }
 
   I.render = function () {
-    try {
-      _render();
-    } catch (err) {
-      console.error('[input.render]', err);
-    }
+    try { _render(); } catch (err) { console.error('[input.render]', err); }
   };
 
   function _render() {
+    if (!document.getElementById('dataBody')) return;
     const settings = S.getSettings();
     let rows = S.getAll().map(r => S.compute(r, settings));
 
-    // search
     if (filterText) {
       rows = rows.filter(r => Object.values(r).some(v => String(v ?? '').toLowerCase().includes(filterText)));
     }
-    // status filter (total status)
     if (filterStatus && filterStatus !== '__all__') {
       if (filterStatus === '__empty__') rows = rows.filter(r => !r.total_status);
       else rows = rows.filter(r => r.total_status === filterStatus);
     }
-    // month filter
     if (filterMonth) rows = rows.filter(r => String(r.tanggal || '').startsWith(filterMonth));
 
-    // sort
     rows.sort((a, b) => {
       const va = a[sortBy], vb = b[sortBy];
       if (va === undefined || va === null || va === '') return 1;
@@ -152,9 +140,9 @@
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
-    document.getElementById('rowCount').textContent = rows.length + ' baris';
+    const rc = document.getElementById('rowCount');
+    if (rc) rc.textContent = rows.length + ' baris';
 
-    // pagination
     const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
     if (page > totalPages) page = totalPages;
     const start = (page - 1) * pageSize;
@@ -162,6 +150,12 @@
 
     const body = document.getElementById('dataBody');
     body.innerHTML = '';
+    if (!slice.length) {
+      body.insertAdjacentHTML('beforeend', `
+        <tr><td colspan="${COLS.length}" style="text-align:center;padding:40px 20px;">
+          <div style="opacity:.6;font-size:13px">Belum ada data. Klik <b>Tambah Data</b> di kanan atas untuk mulai mencatat.</div>
+        </td></tr>`);
+    }
     slice.forEach((r, idx) => {
       const tr = document.createElement('tr');
       COLS.forEach(c => {
@@ -194,7 +188,6 @@
       body.appendChild(tr);
     });
 
-    // pagination control
     renderPagination(totalPages);
   }
 
@@ -206,6 +199,7 @@
 
   function renderPagination(totalPages) {
     const el = document.getElementById('pagination');
+    if (!el) return;
     el.innerHTML = '';
     if (totalPages <= 1) return;
     const mk = (label, p, dis, active) => {
@@ -229,88 +223,89 @@
   let modalEditingId = null;
 
   function bindModal() {
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('btnCancel').addEventListener('click', closeModal);
-    document.getElementById('modalMask').addEventListener('click', (e) => {
-      if (e.target.id === 'modalMask') closeModal();
-    });
-    document.getElementById('btnSave').addEventListener('click', () => saveModal(false));
-    document.getElementById('btnSaveAdd').addEventListener('click', () => saveModal(true));
-    document.getElementById('btnDelete').addEventListener('click', () => {
+    on('modalClose', 'click', closeModal);
+    on('btnCancel',  'click', closeModal);
+    on('modalMask',  'click', (e) => { if (e.target.id === 'modalMask') closeModal(); });
+    on('btnSave',    'click', () => saveModal(false));
+    on('btnSaveAdd', 'click', () => saveModal(true));
+    on('btnDelete',  'click', () => {
       if (modalEditingId && confirm('Hapus baris ini?')) {
         S.remove(modalEditingId);
         U.toast('Baris dihapus', 'warn');
         closeModal();
       }
     });
-    // tanggal -> hari otomatis + live preview
-    document.getElementById('fTanggal').addEventListener('change', () => {
-      document.getElementById('fHari').value = U.dayName(document.getElementById('fTanggal').value);
+    on('fTanggal', 'change', () => {
+      const t = document.getElementById('fTanggal');
+      const h = document.getElementById('fHari');
+      if (t && h) h.value = U.dayName(t.value);
       updateLivePreview();
     });
     ['fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS','fPorsi'].forEach(id => {
-      document.getElementById(id).addEventListener('input', updateLivePreview);
+      on(id, 'input', updateLivePreview);
     });
   }
 
   function openModal(id) {
     modalEditingId = id || null;
     const f = (sel) => document.getElementById(sel);
-    const settings = S.getSettings();
     if (id) {
       const r = S.getById(id);
       if (!r) return;
-      f('modalTitle').textContent = 'Edit Data — ' + U.fmtDate(r.tanggal);
-      f('btnDelete').classList.remove('hidden');
-      f('fId').value = r.id;
-      f('fTanggal').value = r.tanggal || '';
-      f('fHari').value = r.hari || U.dayName(r.tanggal);
-      f('fPorsi').value = r.porsi ?? '';
-      f('fMenuNasi').value = r.menu_nasi || '';
-      f('fMenuHewani').value = r.menu_hewani || '';
-      f('fMenuSayur').value = r.menu_sayur || '';
-      f('fMenuNabati').value = r.menu_nabati || '';
-      f('fMenuBuah').value = r.menu_buah || '';
-      f('fNasiP').value   = r.nasi_p   ?? ''; f('fNasiS').value   = r.nasi_s   ?? '';
-      f('fHewaniP').value = r.hewani_p ?? ''; f('fHewaniS').value = r.hewani_s ?? '';
-      f('fSayurP').value  = r.sayur_p  ?? ''; f('fSayurS').value  = r.sayur_s  ?? '';
-      f('fNabatiP').value = r.nabati_p ?? ''; f('fNabatiS').value = r.nabati_s ?? '';
-      f('fBuahP').value   = r.buah_p   ?? ''; f('fBuahS').value   = r.buah_s   ?? '';
+      setText('modalTitle', 'Edit Data — ' + U.fmtDate(r.tanggal));
+      const bd = f('btnDelete'); if (bd) bd.classList.remove('hidden');
+      setVal('fId', r.id);
+      setVal('fTanggal', r.tanggal || '');
+      setVal('fHari', r.hari || U.dayName(r.tanggal));
+      setVal('fPorsi', r.porsi ?? '');
+      setVal('fMenuNasi', r.menu_nasi || '');
+      setVal('fMenuHewani', r.menu_hewani || '');
+      setVal('fMenuSayur', r.menu_sayur || '');
+      setVal('fMenuNabati', r.menu_nabati || '');
+      setVal('fMenuBuah', r.menu_buah || '');
+      setVal('fNasiP',   r.nasi_p   ?? ''); setVal('fNasiS',   r.nasi_s   ?? '');
+      setVal('fHewaniP', r.hewani_p ?? ''); setVal('fHewaniS', r.hewani_s ?? '');
+      setVal('fSayurP',  r.sayur_p  ?? ''); setVal('fSayurS',  r.sayur_s  ?? '');
+      setVal('fNabatiP', r.nabati_p ?? ''); setVal('fNabatiS', r.nabati_s ?? '');
+      setVal('fBuahP',   r.buah_p   ?? ''); setVal('fBuahS',   r.buah_s   ?? '');
     } else {
-      f('modalTitle').textContent = 'Tambah Data';
-      f('btnDelete').classList.add('hidden');
-      f('fId').value = '';
-      f('fTanggal').value = U.todayISO();
-      f('fHari').value = U.dayName(U.todayISO());
+      setText('modalTitle', 'Tambah Data');
+      const bd = f('btnDelete'); if (bd) bd.classList.add('hidden');
+      setVal('fId', '');
+      setVal('fTanggal', U.todayISO());
+      setVal('fHari', U.dayName(U.todayISO()));
       ['fPorsi','fMenuNasi','fMenuHewani','fMenuSayur','fMenuNabati','fMenuBuah',
        'fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS'
-      ].forEach(id => f(id).value = '');
+      ].forEach(id => setVal(id, ''));
     }
     updateLivePreview();
-    document.getElementById('modalMask').classList.add('show');
+    const m = document.getElementById('modalMask');
+    if (m) m.classList.add('show');
   }
 
+  function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+  function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
   function closeModal() {
-    document.getElementById('modalMask').classList.remove('show');
+    const m = document.getElementById('modalMask');
+    if (m) m.classList.remove('show');
     modalEditingId = null;
   }
 
   function readForm() {
     const f = (sel) => document.getElementById(sel);
-    const num = (id) => {
-      const v = f(id).value;
-      return v === '' ? null : Number(v);
-    };
+    const num = (id) => { const el = f(id); if (!el) return null; const v = el.value; return v === '' ? null : Number(v); };
+    const txt = (id) => { const el = f(id); return el ? (el.value || '').trim() : ''; };
     return {
-      id: f('fId').value || undefined,
-      tanggal: f('fTanggal').value,
-      hari: f('fHari').value || U.dayName(f('fTanggal').value),
+      id: (f('fId') && f('fId').value) || undefined,
+      tanggal: f('fTanggal') ? f('fTanggal').value : '',
+      hari: (f('fHari') && f('fHari').value) || U.dayName(f('fTanggal') ? f('fTanggal').value : ''),
       porsi: num('fPorsi'),
-      menu_nasi: f('fMenuNasi').value.trim(),
-      menu_hewani: f('fMenuHewani').value.trim(),
-      menu_sayur: f('fMenuSayur').value.trim(),
-      menu_nabati: f('fMenuNabati').value.trim(),
-      menu_buah: f('fMenuBuah').value.trim(),
+      menu_nasi: txt('fMenuNasi'),
+      menu_hewani: txt('fMenuHewani'),
+      menu_sayur: txt('fMenuSayur'),
+      menu_nabati: txt('fMenuNabati'),
+      menu_buah: txt('fMenuBuah'),
       nasi_p: num('fNasiP'),     nasi_s: num('fNasiS'),
       hewani_p: num('fHewaniP'), hewani_s: num('fHewaniS'),
       sayur_p: num('fSayurP'),   sayur_s: num('fSayurS'),
@@ -322,9 +317,10 @@
   function updateLivePreview() {
     const rec = readForm();
     const c = S.compute(rec);
-    document.getElementById('lpTotalP').textContent = (c.total_p ?? 0) ? U.fmt(c.total_p) + ' kg' : '0 kg';
-    document.getElementById('lpTotalS').textContent = (c.total_s ?? 0) ? U.fmt(c.total_s) + ' kg' : '0 kg';
-    document.getElementById('lpStatus').innerHTML = renderBadge(c.total_status);
+    setText('lpTotalP', (c.total_p ?? 0) ? U.fmt(c.total_p) + ' kg' : '0 kg');
+    setText('lpTotalS', (c.total_s ?? 0) ? U.fmt(c.total_s) + ' kg' : '0 kg');
+    const ls = document.getElementById('lpStatus');
+    if (ls) ls.innerHTML = renderBadge(c.total_status);
   }
 
   function saveModal(addAnother) {
@@ -336,20 +332,18 @@
       S.upsert(rec);
       U.toast(isEdit ? 'Data diperbarui' : 'Data tersimpan', 'success');
       if (addAnother && !isEdit) {
-        // Auto-fill: tanggal +1 hari, menu di-keep, angka direset
         const next = new Date(rec.tanggal);
         next.setDate(next.getDate() + 1);
-        const f = (sel) => document.getElementById(sel);
         const nextISO = next.toISOString().slice(0, 10);
         modalEditingId = null;
-        f('modalTitle').textContent = 'Tambah Data — ' + U.fmtDate(nextISO);
-        f('btnDelete').classList.add('hidden');
-        f('fId').value = '';
-        f('fTanggal').value = nextISO;
-        f('fHari').value = U.dayName(nextISO);
-        ['fPorsi','fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS'].forEach(id => f(id).value = '');
+        setText('modalTitle', 'Tambah Data — ' + U.fmtDate(nextISO));
+        const bd = document.getElementById('btnDelete'); if (bd) bd.classList.add('hidden');
+        setVal('fId', '');
+        setVal('fTanggal', nextISO);
+        setVal('fHari', U.dayName(nextISO));
+        ['fPorsi','fNasiP','fNasiS','fHewaniP','fHewaniS','fSayurP','fSayurS','fNabatiP','fNabatiS','fBuahP','fBuahS'].forEach(id => setVal(id, ''));
         updateLivePreview();
-        try { f('fPorsi').focus(); } catch (e) {}
+        try { document.getElementById('fPorsi').focus(); } catch (e) {}
       } else {
         closeModal();
       }

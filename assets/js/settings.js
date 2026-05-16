@@ -1,5 +1,5 @@
 /* =========================================================
-   Pengaturan: ambang, password, manajemen user
+   Pengaturan: ambang, password, manajemen user, factory reset
    ========================================================= */
 (function () {
   const NS = (window.MBG = window.MBG || {});
@@ -7,31 +7,52 @@
   const T = (NS.settings = {});
 
   T.init = function () {
-    document.getElementById('setAmbang').value = Math.round(S.getSettings().ambangSerapan * 100);
-    document.getElementById('btnSaveSetting').addEventListener('click', () => {
+    const setEl = document.getElementById('setAmbang');
+    if (setEl) setEl.value = Math.round(S.getSettings().ambangSerapan * 100);
+
+    on('btnSaveSetting', () => {
       const v = parseInt(document.getElementById('setAmbang').value, 10);
       if (!v || v < 1 || v > 100) { U.toast('Persentase 1–100', 'error'); return; }
       S.saveSettings({ ambangSerapan: v / 100 });
       U.toast('Pengaturan disimpan', 'success');
-      // update label panduan
-      document.getElementById('pAmbang').textContent  = v + '%';
-      document.getElementById('pAmbang2').textContent = (100 - v) + '%';
+      updateAmbangLabels(v);
     });
 
-    document.getElementById('btnChangePw').addEventListener('click', changePw);
-    document.getElementById('btnAddUser').addEventListener('click', () => openUserModal());
-    document.getElementById('userClose').addEventListener('click', closeUserModal);
-    document.getElementById('userCancel').addEventListener('click', closeUserModal);
-    document.getElementById('userMask').addEventListener('click', (e) => {
-      if (e.target.id === 'userMask') closeUserModal();
+    on('btnChangePw', changePw);
+    on('btnAddUser', () => openUserModal());
+    on('userClose', closeUserModal);
+    on('userCancel', closeUserModal);
+    const um = document.getElementById('userMask');
+    if (um) um.addEventListener('click', (e) => { if (e.target.id === 'userMask') closeUserModal(); });
+    on('userSave', saveUser);
+
+    // Factory reset
+    on('btnFactoryReset', () => {
+      if (!confirm('Reset Aplikasi akan menghapus SEMUA data lokal (akun admin, data harian, pengaturan).\n\nSetelah reset, Anda harus login ulang dengan admin/admin123.\n\nLanjutkan?')) return;
+      const n = U.factoryResetManual();
+      U.toast('Aplikasi di-reset (' + n + ' data dihapus)', 'warn', 2200);
+      setTimeout(() => location.replace('./login.html'), 1500);
     });
-    document.getElementById('userSave').addEventListener('click', saveUser);
+
+    // App version label
+    const av = document.getElementById('appVersion');
+    if (av) av.textContent = U.APP_VERSION;
+
     T.renderUsers();
-    // panduan label
-    const v = Math.round(S.getSettings().ambangSerapan * 100);
-    document.getElementById('pAmbang').textContent  = v + '%';
-    document.getElementById('pAmbang2').textContent = (100 - v) + '%';
+    updateAmbangLabels(Math.round(S.getSettings().ambangSerapan * 100));
   };
+
+  function on(id, fn) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+
+  function updateAmbangLabels(v) {
+    const a = document.getElementById('pAmbang');
+    const b = document.getElementById('pAmbang2');
+    if (a) a.textContent = v + '%';
+    if (b) b.textContent = (100 - v) + '%';
+  }
 
   async function changePw() {
     const session = A.getSession();
@@ -54,6 +75,7 @@
   T.renderUsers = function () {
     const session = A.getSession();
     const tbody = document.getElementById('userTable');
+    if (!tbody) return;
     tbody.innerHTML = '';
     A.listUsers().forEach(u => {
       const tr = document.createElement('tr');
@@ -77,11 +99,17 @@
   };
 
   function openUserModal() {
-    document.getElementById('userMask').classList.add('show');
-    ['newUsername','newUserPw','newUserPw2'].forEach(id => document.getElementById(id).value = '');
+    const m = document.getElementById('userMask');
+    if (!m) return;
+    m.classList.add('show');
+    ['newUsername','newUserPw','newUserPw2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
   }
   function closeUserModal() {
-    document.getElementById('userMask').classList.remove('show');
+    const m = document.getElementById('userMask');
+    if (m) m.classList.remove('show');
   }
   async function saveUser() {
     const u = document.getElementById('newUsername').value.trim();
