@@ -57,6 +57,7 @@ jobs:
           cp -f login.html _site/login.html
           cp -f app.html _site/app.html
           cp -f 404.html _site/404.html 2>/dev/null || true
+          cp -f reset.html _site/reset.html 2>/dev/null || true
 
           # Copy assets
           cp -r assets _site/assets

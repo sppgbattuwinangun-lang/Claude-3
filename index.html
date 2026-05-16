@@ -7,7 +7,7 @@
   <meta http-equiv="refresh" content="1; url=./login.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20260517a" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260517c" />
 </head>
 <body class="boot-screen">
   <div class="bg-grid"></div>
@@ -16,8 +16,20 @@
     <h2 class="gradient-text" style="margin:0 0 8px 0;font-size:22px;font-weight:700">MBG Monitor</h2>
     <p>Mengarahkan ke halaman login…</p>
     <a href="./login.html">Klik di sini bila tidak otomatis berpindah</a>
+    <p style="margin-top:18px"><a href="./reset.html" style="font-size:12px;color:#94a3b8">Aplikasi bermasalah? Klik untuk reset cache</a></p>
   </div>
   <script>
+    // Kill any old Service Worker / Cache
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+      }).catch(function(){});
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      }).catch(function(){});
+    }
     try {
       const session = JSON.parse(localStorage.getItem('mbg.session') || 'null');
       if (session && session.user && session.expires > Date.now() && !session.mustChangePassword) {

@@ -11,8 +11,28 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20260517a" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260517c" />
   <script>
+    // Anti-cache: bila ada Service Worker LAMA yang nyangkut, kill dia.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+      }).catch(function(){});
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      }).catch(function(){});
+    }
+    // Bila URL mengandung ?reset= → bersihkan localStorage MBG juga
+    if (location.search.indexOf('reset=') >= 0) {
+      try {
+        for (var i = localStorage.length - 1; i >= 0; i--) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('mbg.') === 0) localStorage.removeItem(k);
+        }
+      } catch (e) {}
+    }
     window.addEventListener('error', function (e) {
       try {
         var d = document.createElement('div');
@@ -104,9 +124,9 @@
 
   <div class="toast-area" id="toastArea"></div>
 
-  <script src="./assets/js/utils.js?v=20260517a"></script>
-  <script src="./assets/js/auth.js?v=20260517a"></script>
-  <script src="./assets/js/effects.js?v=20260517a"></script>
-  <script src="./assets/js/login.js?v=20260517a"></script>
+  <script src="./assets/js/utils.js?v=20260517c"></script>
+  <script src="./assets/js/auth.js?v=20260517c"></script>
+  <script src="./assets/js/effects.js?v=20260517c"></script>
+  <script src="./assets/js/login.js?v=20260517c"></script>
 </body>
 </html>
