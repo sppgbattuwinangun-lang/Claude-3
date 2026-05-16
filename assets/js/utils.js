@@ -11,7 +11,7 @@
   // naikkan angka ini. Saat berubah, semua data lama (users, session,
   // data, settings) akan dihapus dan user kembali ke kondisi default.
   // ----------------------------------------------------------------
-  U.APP_VERSION = '2.1.0';
+  U.APP_VERSION = '2.2.1';
   U.VERSION_KEY = 'mbg.app.version';
 
   // Storage namespacing
@@ -21,7 +21,7 @@
     SETTING: 'mbg.settings.v1',
     SESSION: 'mbg.session',
     THEME:   'mbg.theme',
-    SEED:    'mbg.autoSeeded.v3'
+    SEED:    'mbg.autoSeeded.v4'
   };
 
   // ---------- Factory reset (run on EVERY page load) ----------

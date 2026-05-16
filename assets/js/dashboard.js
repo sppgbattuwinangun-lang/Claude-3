@@ -24,9 +24,8 @@
       if (btn) btn.click();
     });
     on('btnEmptySample', () => {
-      const btn = document.getElementById('btnLoadSample');
-      if (btn) btn.click();
-      else { S.loadSample(1); U.toast('Data contoh dimuat (1 hari)', 'success'); }
+      S.forceSeedOne();
+      U.toast('Data contoh 1 hari ditambahkan', 'success');
     });
     D.render();
   };

@@ -109,8 +109,11 @@
     if (av) av.textContent = (session.user.username[0] || 'A').toUpperCase();
 
     // Auto-seed 1 hari dummy bila kosong (fresh install)
+    // Hanya jalan satu kali per browser; bila user menghapus semua data,
+    // tampilkan tombol "Muat Data Contoh" di empty-state — tidak auto-restore.
     safe(() => {
       if (S.autoSeedIfEmpty()) {
+        console.info('[MBG] Auto-seeded 1 day of sample data');
         setTimeout(() => U.toast('Data contoh 1 hari otomatis dimuat. Silakan ubah/tambah sesuai kebutuhan.', 'success', 4500), 800);
       }
     }, 'autoSeed');

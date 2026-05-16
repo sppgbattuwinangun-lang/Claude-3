@@ -101,7 +101,7 @@
       U.toast('Semua data dihapus', 'warn');
     });
     on('btnLoadSample', 'click', () => {
-      S.loadSample(1);
+      S.forceSeedOne();
       U.toast('Data contoh 1 hari ditambahkan', 'success');
     });
   }

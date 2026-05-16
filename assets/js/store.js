@@ -228,6 +228,13 @@
     return true;
   };
 
+  // Force seed: tambah 1 hari data, abaikan flag (untuk tombol manual)
+  S.forceSeedOne = function () {
+    S.loadSample(1);
+    try { localStorage.setItem(U.K.SEED, '1'); } catch (e) {}
+    return true;
+  };
+
   // ---------- Filter helpers ----------
   S.filterByRange = function (rows, from, to) {
     rows = rows || S.getAll();
