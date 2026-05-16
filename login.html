@@ -4,44 +4,46 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MBG Monitor — Login</title>
-  <link rel="stylesheet" href="./assets/css/styles.css?v=1778879456" />
+  <meta name="description" content="MBG Monitor — Masuk untuk mengelola monitoring sampah pasca distribusi MBG." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260516" />
   <script>
-    // Error handler paling awal — tampilkan error apapun yang terjadi sebelum script lain load
     window.addEventListener('error', function (e) {
       try {
-        document.body && (document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:14px 20px;font:13px/1.5 -apple-system,sans-serif;z-index:99999;border-bottom:2px solid #ef4444"><b>Error JS:</b> ' + (e.message || e.error) + '<br><small>File: ' + (e.filename || '-') + ' baris ' + (e.lineno || '?') + '</small></div>');
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:14px 20px;font:13px/1.5 -apple-system,sans-serif;z-index:99999;border-bottom:2px solid #ef4444';
+        d.innerHTML = '<b>Error JS:</b> ' + (e.message || e.error) + '<br><small>File: ' + (e.filename || '-') + ' baris ' + (e.lineno || '?') + '</small>';
+        (document.body || document.documentElement).appendChild(d);
       } catch (ex) {}
     });
-    // Bersihkan session corrupt yang mungkin nyangkut
-    try {
-      var s = localStorage.getItem('mbg.session');
-      if (s) { JSON.parse(s); }
-    } catch (e) {
-      localStorage.removeItem('mbg.session');
-    }
+    try { var s = localStorage.getItem('mbg.session'); if (s) JSON.parse(s); } catch (e) { localStorage.removeItem('mbg.session'); }
   </script>
 </head>
 <body>
+  <div class="bg-grid"></div>
+
   <div class="login-shell">
     <aside class="login-aside">
       <div class="brand">
         <div class="logo">M</div>
         <div>
           <div>MBG Monitor</div>
-          <div style="font-size:12px;opacity:.85">Monitoring Sampah Pasca Distribusi</div>
+          <div style="font-size:12px;opacity:.85;font-weight:500">Monitoring Sampah Pasca Distribusi</div>
         </div>
       </div>
       <div>
         <h1>Pantau serapan &amp; sampah Makan Bergizi Gratis secara real time.</h1>
-        <p>Aplikasi monitoring berbasis web untuk SPPG. Input data harian, lihat dashboard, grafik per item, dan ekspor ke Excel — sinkron otomatis di semua tab.</p>
+        <p>Aplikasi monitoring berbasis web untuk SPPG. Input data harian, lihat dashboard, grafik per item, dan unduh laporan PDF — semuanya dalam satu tempat.</p>
         <div class="features">
-          <div class="feat"><b>Real time</b><span>Sinkron antar tab via BroadcastChannel</span></div>
-          <div class="feat"><b>Login admin</b><span>Hash PBKDF2 + sesi aman</span></div>
-          <div class="feat"><b>Import Excel</b><span>Kompatibel format SPPG</span></div>
-          <div class="feat"><b>UI modern</b><span>Mode terang &amp; gelap, responsif</span></div>
+          <div class="feat" data-tilt><b>Real time</b><span>Sinkron antar tab via BroadcastChannel</span></div>
+          <div class="feat" data-tilt><b>Login admin</b><span>Hash PBKDF2 + sesi aman</span></div>
+          <div class="feat" data-tilt><b>Laporan PDF</b><span>Filter rentang tanggal otomatis</span></div>
+          <div class="feat" data-tilt><b>UI modern</b><span>Mode terang &amp; gelap, responsif</span></div>
         </div>
       </div>
-      <div class="footnote">&copy; <span id="year"></span> SPPG Battu Winangun · v1.0</div>
+      <div class="footnote">&copy; <span id="year"></span> SPPG Battu Winangun · v2.0 Premium</div>
     </aside>
 
     <main class="login-main">
@@ -66,16 +68,18 @@
             </div>
           </div>
           <div class="field">
-            <label class="muted" style="display:flex;align-items:center;gap:6px;font-weight:500;">
-              <input type="checkbox" id="remember" /> Ingat saya selama 7 hari
+            <label class="muted" style="display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer;">
+              <input type="checkbox" id="remember" style="width:auto;accent-color:var(--c-primary);" /> Ingat saya selama 7 hari
             </label>
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" data-wave>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Masuk
+          </button>
           <div class="helper" id="firstHint"></div>
         </form>
       </div>
 
-      <!-- Card untuk paksa ganti password -->
       <div class="login-card hidden" id="changeCard">
         <h2>Ganti Password Default</h2>
         <p class="lead">Demi keamanan, ganti password default sebelum melanjutkan.</p>
@@ -89,7 +93,7 @@
             <label>Konfirmasi password baru</label>
             <input type="password" id="newPw2" required minlength="8" />
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Simpan &amp; Lanjut</button>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Simpan &amp; Lanjut</button>
         </form>
       </div>
     </main>
@@ -97,8 +101,9 @@
 
   <div class="toast-area" id="toastArea"></div>
 
-  <script src="./assets/js/utils.js?v=1778879456"></script>
-  <script src="./assets/js/auth.js?v=1778879456"></script>
-  <script src="./assets/js/login.js?v=1778879456"></script>
+  <script src="./assets/js/utils.js?v=20260516"></script>
+  <script src="./assets/js/auth.js?v=20260516"></script>
+  <script src="./assets/js/effects.js?v=20260516"></script>
+  <script src="./assets/js/login.js?v=20260516"></script>
 </body>
 </html>
