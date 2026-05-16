@@ -34,7 +34,7 @@ jobs:
           echo ""
           echo "=== Cek file wajib ==="
           MISSING=0
-          for f in index.html login.html app.html test.html assets/css/styles.css assets/js/utils.js assets/js/auth.js assets/js/login.js assets/js/app.js; do
+          for f in index.html login.html app.html assets/css/styles.css assets/js/utils.js assets/js/auth.js assets/js/store.js assets/js/effects.js assets/js/dashboard.js assets/js/charts.js assets/js/input.js assets/js/pdf.js assets/js/settings.js assets/js/login.js assets/js/app.js; do
             if [ -f "$f" ]; then
               echo "✓ OK: $f ($(wc -c < "$f") bytes)"
             else
@@ -52,13 +52,11 @@ jobs:
           rm -rf _site
           mkdir -p _site
 
-          # Copy semua HTML
+          # Copy semua HTML yang ada
           cp -f index.html _site/index.html
           cp -f login.html _site/login.html
           cp -f app.html _site/app.html
-          cp -f test.html _site/test.html
           cp -f 404.html _site/404.html 2>/dev/null || true
-          cp -f mbg.html _site/mbg.html 2>/dev/null || true
 
           # Copy assets
           cp -r assets _site/assets
@@ -66,7 +64,7 @@ jobs:
           # .nojekyll WAJIB ada di root site
           touch _site/.nojekyll
 
-          # Buat juga subfolder mbg-monitor/ yang redirect ke root (jaga-jaga URL lama)
+          # Subfolder mbg-monitor/ yang redirect ke root (jaga-jaga URL lama)
           mkdir -p _site/mbg-monitor
           cat > _site/mbg-monitor/index.html << 'EOF'
           <!doctype html><html><head><meta charset="utf-8"><title>Redirect</title>
@@ -75,7 +73,6 @@ jobs:
           EOF
           cp _site/mbg-monitor/index.html _site/mbg-monitor/login.html
           cp _site/mbg-monitor/index.html _site/mbg-monitor/app.html
-          # Update redirect target untuk login dan app
           sed -i 's|url=\.\./|url=../login.html|g' _site/mbg-monitor/login.html
           sed -i "s|location.replace('\.\./')|location.replace('../login.html')|g" _site/mbg-monitor/login.html
           sed -i 's|url=\.\./|url=../app.html|g' _site/mbg-monitor/app.html
@@ -85,14 +82,8 @@ jobs:
           echo "=== _site root ==="
           ls -la _site/
           echo ""
-          echo "=== _site/assets/ ==="
-          ls -la _site/assets/
-          echo ""
           echo "=== _site/assets/js/ ==="
           ls -la _site/assets/js/
-          echo ""
-          echo "=== _site/mbg-monitor/ (redirect lama) ==="
-          ls -la _site/mbg-monitor/
           echo ""
           echo "=== Total ukuran ==="
           du -sh _site/
