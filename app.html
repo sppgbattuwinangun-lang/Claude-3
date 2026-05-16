@@ -4,55 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MBG Monitor — Dashboard</title>
-  <meta name="description" content="MBG Monitor — Monitoring Sampah Pasca Distribusi MBG. Dashboard, input harian, grafik, dan laporan PDF." />
+  <meta name="description" content="MBG Monitor — Monitoring Sampah Pasca Distribusi MBG. Dashboard, input harian, grafik, analisa lanjut, dan laporan PDF." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20260517c" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260520a" />
   <script>
-    // Anti-cache: bila ada Service Worker LAMA yang nyangkut, kill dia.
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
-      }).catch(function(){});
-    }
-    if ('caches' in window) {
-      caches.keys().then(function(keys) {
-        keys.forEach(function(k) { caches.delete(k); });
-      }).catch(function(){});
-    }
-    // Pre-script diagnostics — pasang sebelum library lain di-load
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
+    if ('caches' in window) { caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
     window.addEventListener('error', function (e) {
-      // Coba sembunyikan splash dan tampilkan error visible (sebelum app.js sempat load)
       var fb = document.getElementById('boot-fallback');
       if (fb) {
         fb.classList.remove('hidden');
-        var msg = (e.message || (e.error && e.error.message) || 'Unknown error') +
-                  '\nFile: ' + (e.filename || '-') + ' line ' + (e.lineno || '?');
         var pre = document.getElementById('boot-fallback-msg');
-        if (pre) pre.textContent = msg;
+        if (pre) pre.textContent = (e.message || e.error || 'Unknown') + '\nFile: ' + (e.filename || '-') + ' line ' + (e.lineno || '?');
       }
     }, true);
     try { var s = localStorage.getItem('mbg.session'); if (s) JSON.parse(s); }
     catch (e) { try { localStorage.removeItem('mbg.session'); } catch (e2) {} }
   </script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <!-- jsPDF + autotable -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-  <noscript>
-    <div style="padding:24px;background:#fee2e2;color:#991b1b;font-family:sans-serif;font-weight:700">
-      Aplikasi memerlukan JavaScript aktif. Mohon aktifkan JavaScript di browser Anda.
-    </div>
-  </noscript>
+  <noscript><div style="padding:24px;background:#fee2e2;color:#991b1b;font-weight:700">Aktifkan JavaScript di browser.</div></noscript>
 
-  <!-- Splash sebelum app.js mount -->
+  <!-- Splash -->
   <div id="appSplash" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0a0a1a;color:#fff;font-family:Inter,system-ui,sans-serif">
     <div style="text-align:center;max-width:420px;padding:24px">
       <div style="width:64px;height:64px;margin:0 auto 18px;border-radius:18px;background:linear-gradient(135deg,#6366f1,#ec4899);display:grid;place-items:center;font-size:30px;font-weight:800;box-shadow:0 12px 32px rgba(99,102,241,.5)">M</div>
@@ -62,26 +43,20 @@
         <div style="height:100%;background:linear-gradient(90deg,#6366f1,#ec4899);border-radius:99px;animation:splashbar 1.6s ease-in-out infinite"></div>
       </div>
     </div>
-    <style>
-      @keyframes splashbar {
-        0% { width: 0%; transform: translateX(0); }
-        50% { width: 80%; }
-        100% { width: 100%; transform: translateX(100%); }
-      }
-    </style>
+    <style>@keyframes splashbar{0%{width:0%;transform:translateX(0)}50%{width:80%}100%{width:100%;transform:translateX(100%)}}</style>
   </div>
 
   <!-- Boot fallback bila JS error -->
   <div id="boot-fallback" class="hidden" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,10,30,.95);backdrop-filter:blur(8px);color:#fff;padding:24px;font-family:Inter,system-ui,sans-serif">
     <div style="max-width:520px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:28px">
       <div style="font-size:42px">⚠️</div>
-      <h2 style="margin:8px 0 4px 0;font-size:20px;font-weight:700">Aplikasi gagal dimuat</h2>
-      <p style="color:#cbd5e1;font-size:13px;line-height:1.55;margin:0 0 14px 0">Terjadi error saat memuat script. Coba reset aplikasi atau muat ulang halaman.</p>
-      <pre id="boot-fallback-msg" style="background:rgba(0,0,0,.4);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 14px;font-family:monospace;font-size:12px;color:#fca5a5;max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0"></pre>
+      <h2 style="margin:8px 0 4px 0;font-size:20px">Aplikasi gagal dimuat</h2>
+      <p style="color:#cbd5e1;font-size:13px;margin:0 0 14px 0">Coba reset atau muat ulang.</p>
+      <pre id="boot-fallback-msg" style="background:rgba(0,0,0,.4);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px;font-family:monospace;font-size:12px;color:#fca5a5;max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0"></pre>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-        <button onclick="location.reload()" style="flex:1;min-width:140px;padding:11px 16px;border-radius:12px;border:0;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-weight:600;cursor:pointer">Muat Ulang</button>
-        <button onclick="(function(){for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.startsWith('mbg.'))localStorage.removeItem(k);}location.replace('./login.html')})()" style="flex:1;min-width:140px;padding:11px 16px;border-radius:12px;border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.1);color:#fca5a5;font-weight:600;cursor:pointer">Reset Aplikasi</button>
-        <a href="./login.html" style="flex:1;min-width:140px;padding:11px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);text-align:center;color:#cbd5e1;font-weight:600;text-decoration:none">Ke Login</a>
+        <button onclick="location.reload()" style="flex:1;padding:11px;border-radius:12px;border:0;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-weight:600;cursor:pointer">Muat Ulang</button>
+        <a href="./reset.html" style="flex:1;padding:11px;border-radius:12px;border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.1);color:#fca5a5;font-weight:600;text-decoration:none;text-align:center">Reset Aplikasi</a>
+        <a href="./login.html" style="flex:1;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,.15);text-align:center;color:#cbd5e1;font-weight:600;text-decoration:none">Ke Login</a>
       </div>
     </div>
   </div>
@@ -98,41 +73,43 @@
           <div class="sub">Sampah Pasca Distribusi</div>
         </div>
       </div>
-
       <div class="nav-item active" data-page="dashboard" data-wave>
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
         Dashboard
       </div>
       <div class="nav-item" data-page="input" data-wave>
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         Input Harian
       </div>
+      <div class="nav-item" data-page="analisa" data-wave>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20"/><rect x="4" y="10" width="3" height="10"/><rect x="10.5" y="6" width="3" height="14"/><rect x="17" y="2" width="3" height="18"/></svg>
+        Analisa Lanjut
+      </div>
       <div class="nav-item" data-page="grafik" data-wave>
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-7"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-7"/></svg>
         Grafik Item
       </div>
       <div class="nav-item" data-page="laporan" data-wave>
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="9" y1="9" x2="11" y2="9"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         Laporan PDF
       </div>
       <div class="nav-item" data-page="panduan" data-wave>
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         Panduan
       </div>
       <div class="nav-item" data-page="settings" data-wave>
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.7 1 1.1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.7 1 1.1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
         Pengaturan
       </div>
-
       <div class="spacer"></div>
       <div class="who">
         <div class="avatar" id="avatar">A</div>
-        <div style="flex:1; line-height:1.2;">
-          <div style="color:var(--text);font-weight:600;font-size:13px;" id="whoName">admin</div>
-          <div id="whoRole" class="muted" style="font-size:11px;">administrator</div>
+        <div style="flex:1;line-height:1.2">
+          <div style="color:var(--text);font-weight:600;font-size:13px" id="whoName">admin</div>
+          <div id="whoRole" class="muted" style="font-size:11px">administrator</div>
         </div>
         <button class="icon-btn" title="Keluar" id="btnLogout" aria-label="Logout">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>
     </aside>
@@ -142,12 +119,12 @@
     <section class="main">
       <header class="topbar">
         <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Menu">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <div class="title" id="pageTitle">Dashboard</div>
         <div class="pulse"><span id="liveStatus">Real-time aktif</span></div>
-        <button class="icon-btn" id="btnTheme" title="Tukar tema" aria-label="Tema">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
+        <button class="icon-btn" id="btnTheme" title="Tema" aria-label="Tema">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
         </button>
       </header>
 
@@ -158,26 +135,21 @@
           <div class="page-header">
             <div>
               <h1>Dashboard Analisis Sampah MBG</h1>
-              <p>Pantau total pemakaian, sampah, dan persentase serapan secara real-time. Klik kartu untuk lihat detail item.</p>
+              <p>Pantau total pemakaian, sampah, dan persentase serapan secara real-time.</p>
             </div>
             <div class="actions">
-              <button class="btn" id="btnQuickAdd">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Tambah Data
-              </button>
-              <button class="btn btn-primary" data-go="laporan">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Buat Laporan PDF
-              </button>
+              <button class="btn" id="btnQuickAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Tambah Data</button>
+              <button class="btn" data-go="analisa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20"/><rect x="4" y="10" width="3" height="10"/><rect x="10.5" y="6" width="3" height="14"/><rect x="17" y="2" width="3" height="18"/></svg>Analisa Lanjut</button>
+              <button class="btn btn-primary" data-go="laporan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Buat Laporan PDF</button>
             </div>
           </div>
 
-          <div id="emptyHint" class="empty-hint" style="display:none;">
+          <div id="emptyHint" class="empty-hint" style="display:none">
             <div class="ico-big">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
             </div>
             <h3>Belum ada data</h3>
-            <p>Mulai isi data harian monitoring sampah pasca distribusi MBG. Data akan otomatis tercatat dan grafik akan terisi seketika.</p>
+            <p>Mulai isi data harian monitoring sampah pasca distribusi MBG.</p>
             <div class="actions">
               <button class="btn btn-primary" id="btnEmptyAdd">Tambah Data Sekarang</button>
               <button class="btn" id="btnEmptySample">Muat Data Contoh (1 hari)</button>
@@ -186,35 +158,23 @@
 
           <!-- KPI -->
           <div class="kpi-grid">
-            <div class="kpi k-1" data-reveal>
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                Hari Tercatat
-              </div>
+            <div class="kpi k-1">
+              <div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Hari Tercatat</div>
               <div class="val" id="kpiDays">0</div>
               <div class="sub2">Total hari dengan data</div>
             </div>
-            <div class="kpi k-2" data-reveal>
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
-                Total Pemakaian
-              </div>
+            <div class="kpi k-2">
+              <div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>Total Pemakaian</div>
               <div class="val" id="kpiUse">0 kg</div>
-              <div class="sub2">Berat total bahan terdistribusi</div>
+              <div class="sub2">Berat total terdistribusi</div>
             </div>
-            <div class="kpi k-3" data-reveal>
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
-                Total Sampah
-              </div>
+            <div class="kpi k-3">
+              <div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>Total Sampah</div>
               <div class="val" id="kpiWaste">0 kg</div>
               <div class="sub2">Sampah pasca distribusi</div>
             </div>
-            <div class="kpi k-4" data-reveal>
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12A10 10 0 1 1 12 2v10z"/></svg></span>
-                % Serapan
-              </div>
+            <div class="kpi k-4">
+              <div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12A10 10 0 1 1 12 2v10z"/></svg></span>% Serapan</div>
               <div class="val" id="kpiAbsorb">—</div>
               <div class="sub2"><b id="kpiAbsorbStatus">—</b></div>
             </div>
@@ -222,12 +182,9 @@
 
           <!-- Charts row -->
           <div class="chart-row">
-            <div class="card" data-reveal>
+            <div class="card">
               <div class="card-head">
-                <div>
-                  <h3>Tren Harian</h3>
-                  <div class="sub">Pemakaian (line) vs Sampah (bar)</div>
-                </div>
+                <div><h3>Tren Harian</h3><div class="sub">Pemakaian (line) vs Sampah (bar)</div></div>
                 <div class="tabs">
                   <span class="tab active" data-range="all">All</span>
                   <span class="tab" data-range="30">30</span>
@@ -235,54 +192,25 @@
                   <span class="tab" data-range="7">7</span>
                 </div>
               </div>
-              <div class="card-body">
-                <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
-              </div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="chartTrend"></canvas></div></div>
             </div>
-            <div class="card" data-reveal>
-              <div class="card-head">
-                <div>
-                  <h3>Komposisi Sampah</h3>
-                  <div class="sub">Per 5 item utama</div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="chart-wrap"><canvas id="chartDonut"></canvas></div>
-              </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Komposisi Sampah</h3><div class="sub">Per 5 item utama</div></div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="chartDonut"></canvas></div></div>
             </div>
           </div>
 
-          <!-- Item summary -->
-          <div class="card" data-reveal>
-            <div class="card-head">
-              <div>
-                <h3>Ringkasan Per Item</h3>
-                <div class="sub">Pemakaian, sampah, dan persentase serapan masing-masing item</div>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="item-grid" id="itemSummaryGrid"></div>
-            </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Ringkasan Per Item</h3><div class="sub">Pemakaian, sampah, serapan tiap item</div></div></div>
+            <div class="card-body"><div class="item-grid" id="itemSummaryGrid"></div></div>
           </div>
 
-          <!-- Recap table -->
-          <div class="card mt-24" data-reveal>
-            <div class="card-head">
-              <div>
-                <h3>Tabel Rekap</h3>
-                <div class="sub">Status berdasarkan ambang serapan</div>
-              </div>
-            </div>
-            <div class="card-body" style="padding:0;">
+          <div class="card mt-24">
+            <div class="card-head"><div><h3>Tabel Rekap</h3><div class="sub">Status berdasarkan ambang serapan</div></div></div>
+            <div class="card-body" style="padding:0">
               <div class="table-scroll">
-                <table class="tbl" style="min-width:auto;">
-                  <thead>
-                    <tr>
-                      <th>Item</th><th class="col-num">Pemakaian (kg)</th><th class="col-num">Sampah (kg)</th>
-                      <th class="col-num">% Sampah</th><th class="col-num">% Serapan</th>
-                      <th>Ambang</th><th>Status</th>
-                    </tr>
-                  </thead>
+                <table class="tbl" style="min-width:auto">
+                  <thead><tr><th>Item</th><th class="col-num">Pemakaian (kg)</th><th class="col-num">Sampah (kg)</th><th class="col-num">% Sampah</th><th class="col-num">% Serapan</th><th>Ambang</th><th>Status</th></tr></thead>
                   <tbody id="recapBody"></tbody>
                   <tfoot id="recapFoot"></tfoot>
                 </table>
@@ -296,28 +224,19 @@
           <div class="page-header">
             <div>
               <h1>Input Harian</h1>
-              <p>Catat data harian: tanggal, menu, pemakaian, dan sampah per item. Persentase serapan dan status dihitung otomatis.</p>
+              <p>Catat data harian: tanggal, distribusi, menu, pemakaian/sampah per item dengan sub-kategori organik &amp; anorganik.</p>
             </div>
             <div class="actions">
-              <button class="btn btn-primary" id="btnAdd">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Tambah Data
-              </button>
-              <button class="btn" id="btnLoadSample" title="Tambah 1 hari data contoh">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 4l-10 10-3-3"/></svg>
-                Data Contoh
-              </button>
-              <button class="btn btn-danger" id="btnReset" title="Hapus semua data">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                Reset Data
-              </button>
+              <button class="btn btn-primary" id="btnAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Tambah Data</button>
+              <button class="btn" id="btnLoadSample" title="Tambah 1 hari data contoh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 4l-10 10-3-3"/></svg>Data Contoh</button>
+              <button class="btn btn-danger" id="btnReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Reset Data</button>
             </div>
           </div>
 
           <div class="table-wrap">
             <div class="table-toolbar">
               <div class="search">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input id="tableSearch" type="search" placeholder="Cari menu, tanggal…" />
               </div>
               <select id="filterStatus" title="Filter status">
@@ -344,7 +263,7 @@
             <div class="pagination" id="pagination"></div>
           </div>
 
-          <!-- ===== Modal Input ===== -->
+          <!-- ===== Modal Input — EXTENDED ===== -->
           <div class="modal-mask" id="modalMask">
             <div class="modal lg">
               <div class="modal-head">
@@ -359,9 +278,39 @@
                 <div class="form-section">
                   <h4>Informasi Hari</h4>
                   <div class="form-grid">
-                    <div class="field"><label>Tanggal</label><input type="date" id="fTanggal" /></div>
-                    <div class="field"><label>Hari</label><input type="text" id="fHari" placeholder="Otomatis dari tanggal" /></div>
-                    <div class="field"><label>Jumlah Porsi</label><input type="number" id="fPorsi" min="0" placeholder="3000" /></div>
+                    <div class="field"><label>Tanggal *</label><input type="date" id="fTanggal" required /></div>
+                    <div class="field"><label>Hari (otomatis)</label><input type="text" id="fHari" placeholder="Otomatis dari tanggal" /></div>
+                    <div class="field"><label>Cuaca</label>
+                      <select id="fCuaca">
+                        <option value="">— pilih —</option>
+                        <option value="cerah">☀️ Cerah</option>
+                        <option value="berawan">⛅ Berawan</option>
+                        <option value="mendung">☁️ Mendung</option>
+                        <option value="hujan">🌧️ Hujan</option>
+                        <option value="gerimis">🌦️ Gerimis</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <h4>Distribusi</h4>
+                  <div class="form-grid">
+                    <div class="field"><label>Target Porsi (rencana)</label><input type="number" id="fTarget" min="0" placeholder="3500" /></div>
+                    <div class="field"><label>Jumlah Porsi Terdistribusi *</label><input type="number" id="fPorsi" min="0" placeholder="3000" required /></div>
+                    <div class="field"><label>Hadir / Diterima</label><input type="number" id="fHadir" min="0" placeholder="2900" /></div>
+                  </div>
+                  <div class="field mt-12">
+                    <label>Sasaran Distribusi (boleh lebih dari satu)</label>
+                    <div class="chip-group" id="fSasaranGroup">
+                      <label class="chip"><input type="checkbox" value="sd" /> <span>Siswa SD</span></label>
+                      <label class="chip"><input type="checkbox" value="smp" /> <span>Siswa SMP</span></label>
+                      <label class="chip"><input type="checkbox" value="sma" /> <span>Siswa SMA</span></label>
+                      <label class="chip"><input type="checkbox" value="paud" /> <span>PAUD/TK</span></label>
+                      <label class="chip"><input type="checkbox" value="balita" /> <span>Balita</span></label>
+                      <label class="chip"><input type="checkbox" value="ibu" /> <span>Ibu Hamil/Menyusui</span></label>
+                      <label class="chip"><input type="checkbox" value="umum" /> <span>Umum</span></label>
+                    </div>
                   </div>
                 </div>
 
@@ -369,62 +318,91 @@
                   <h4>Nama Menu</h4>
                   <div class="form-grid">
                     <div class="field"><label>Menu Nasi</label><input type="text" id="fMenuNasi" placeholder="Nasi Putih" /></div>
-                    <div class="field"><label>Menu Protein Hewani</label><input type="text" id="fMenuHewani" placeholder="Telur" /></div>
+                    <div class="field"><label>Menu Protein Hewani</label><input type="text" id="fMenuHewani" placeholder="Telur Balado" /></div>
                     <div class="field"><label>Menu Sayur</label><input type="text" id="fMenuSayur" placeholder="Sayur Tumis" /></div>
-                    <div class="field"><label>Menu Protein Nabati</label><input type="text" id="fMenuNabati" placeholder="Tempe" /></div>
+                    <div class="field"><label>Menu Protein Nabati</label><input type="text" id="fMenuNabati" placeholder="Tempe Goreng" /></div>
                     <div class="field"><label>Menu Buah</label><input type="text" id="fMenuBuah" placeholder="Pisang" /></div>
                   </div>
                 </div>
 
+                <!-- Per-item dengan sub organik/anorganik -->
                 <div class="form-section">
-                  <h4>Nasi (kg)</h4>
-                  <div class="form-grid">
-                    <div class="field"><label>Pemakaian</label><input type="number" id="fNasiP" min="0" step="0.1" /></div>
-                    <div class="field"><label>Sampah</label><input type="number" id="fNasiS" min="0" step="0.1" /></div>
+                  <h4>Pemakaian &amp; Sampah Per Item (kg)</h4>
+                  <div class="muted" style="font-size:12px;margin-top:-8px;margin-bottom:8px">Isi pemakaian + sampah. Sub-kategori (organik/anorganik) opsional — bila diisi, total sampah otomatis dihitung dari sub.</div>
+
+                  <div class="item-input-group t-nasi">
+                    <div class="iig-head"><span class="swatch">🍚</span><b>Nasi (kg)</b></div>
+                    <div class="form-grid">
+                      <div class="field"><label>Pemakaian</label><input type="number" id="fNasiP" min="0" step="0.1" /></div>
+                      <div class="field"><label>Total Sampah</label><input type="number" id="fNasiS" min="0" step="0.1" /></div>
+                      <div class="field"><label>Organik</label><input type="number" id="fNasiOrg" min="0" step="0.1" placeholder="opsional" /></div>
+                      <div class="field"><label>Anorganik</label><input type="number" id="fNasiAnorg" min="0" step="0.1" placeholder="opsional" /></div>
+                    </div>
+                  </div>
+
+                  <div class="item-input-group t-hewani">
+                    <div class="iig-head"><span class="swatch">🍗</span><b>Protein Hewani (kg)</b></div>
+                    <div class="form-grid">
+                      <div class="field"><label>Pemakaian</label><input type="number" id="fHewaniP" min="0" step="0.1" /></div>
+                      <div class="field"><label>Total Sampah</label><input type="number" id="fHewaniS" min="0" step="0.1" /></div>
+                      <div class="field"><label>Organik</label><input type="number" id="fHewaniOrg" min="0" step="0.1" placeholder="opsional" /></div>
+                      <div class="field"><label>Anorganik</label><input type="number" id="fHewaniAnorg" min="0" step="0.1" placeholder="opsional" /></div>
+                    </div>
+                  </div>
+
+                  <div class="item-input-group t-sayur">
+                    <div class="iig-head"><span class="swatch">🥬</span><b>Sayur (kg)</b></div>
+                    <div class="form-grid">
+                      <div class="field"><label>Pemakaian</label><input type="number" id="fSayurP" min="0" step="0.1" /></div>
+                      <div class="field"><label>Total Sampah</label><input type="number" id="fSayurS" min="0" step="0.1" /></div>
+                      <div class="field"><label>Organik</label><input type="number" id="fSayurOrg" min="0" step="0.1" placeholder="opsional" /></div>
+                      <div class="field"><label>Anorganik</label><input type="number" id="fSayurAnorg" min="0" step="0.1" placeholder="opsional" /></div>
+                    </div>
+                  </div>
+
+                  <div class="item-input-group t-nabati">
+                    <div class="iig-head"><span class="swatch">🥜</span><b>Protein Nabati (kg)</b></div>
+                    <div class="form-grid">
+                      <div class="field"><label>Pemakaian</label><input type="number" id="fNabatiP" min="0" step="0.1" /></div>
+                      <div class="field"><label>Total Sampah</label><input type="number" id="fNabatiS" min="0" step="0.1" /></div>
+                      <div class="field"><label>Organik</label><input type="number" id="fNabatiOrg" min="0" step="0.1" placeholder="opsional" /></div>
+                      <div class="field"><label>Anorganik</label><input type="number" id="fNabatiAnorg" min="0" step="0.1" placeholder="opsional" /></div>
+                    </div>
+                  </div>
+
+                  <div class="item-input-group t-buah">
+                    <div class="iig-head"><span class="swatch">🍎</span><b>Buah (kg)</b></div>
+                    <div class="form-grid">
+                      <div class="field"><label>Pemakaian</label><input type="number" id="fBuahP" min="0" step="0.1" /></div>
+                      <div class="field"><label>Total Sampah</label><input type="number" id="fBuahS" min="0" step="0.1" /></div>
+                      <div class="field"><label>Organik</label><input type="number" id="fBuahOrg" min="0" step="0.1" placeholder="opsional" /></div>
+                      <div class="field"><label>Anorganik</label><input type="number" id="fBuahAnorg" min="0" step="0.1" placeholder="opsional" /></div>
+                    </div>
                   </div>
                 </div>
+
                 <div class="form-section">
-                  <h4>Protein Hewani (kg)</h4>
-                  <div class="form-grid">
-                    <div class="field"><label>Pemakaian</label><input type="number" id="fHewaniP" min="0" step="0.1" /></div>
-                    <div class="field"><label>Sampah</label><input type="number" id="fHewaniS" min="0" step="0.1" /></div>
+                  <h4>Catatan &amp; Alasan</h4>
+                  <div class="field"><label>Alasan Sampah Dominan (opsional)</label>
+                    <input type="text" id="fAlasan" list="alasanList" placeholder="cth: Anak tidak suka menu, porsi terlalu banyak…" />
+                    <datalist id="alasanList">
+                      <option>Porsi terlalu banyak</option>
+                      <option>Anak tidak suka menu</option>
+                      <option>Cuaca panas, anak kurang nafsu</option>
+                      <option>Distribusi terlambat</option>
+                      <option>Menu kurang variasi</option>
+                      <option>Bahan kurang segar</option>
+                    </datalist>
                   </div>
-                </div>
-                <div class="form-section">
-                  <h4>Sayur (kg)</h4>
-                  <div class="form-grid">
-                    <div class="field"><label>Pemakaian</label><input type="number" id="fSayurP" min="0" step="0.1" /></div>
-                    <div class="field"><label>Sampah</label><input type="number" id="fSayurS" min="0" step="0.1" /></div>
-                  </div>
-                </div>
-                <div class="form-section">
-                  <h4>Protein Nabati (kg)</h4>
-                  <div class="form-grid">
-                    <div class="field"><label>Pemakaian</label><input type="number" id="fNabatiP" min="0" step="0.1" /></div>
-                    <div class="field"><label>Sampah</label><input type="number" id="fNabatiS" min="0" step="0.1" /></div>
-                  </div>
-                </div>
-                <div class="form-section">
-                  <h4>Buah (kg)</h4>
-                  <div class="form-grid">
-                    <div class="field"><label>Pemakaian</label><input type="number" id="fBuahP" min="0" step="0.1" /></div>
-                    <div class="field"><label>Sampah</label><input type="number" id="fBuahS" min="0" step="0.1" /></div>
+                  <div class="field"><label>Catatan Tambahan</label>
+                    <textarea id="fCatatan" rows="2" placeholder="Catatan operasional, kejadian khusus, dll."></textarea>
                   </div>
                 </div>
 
                 <div class="live-preview">
-                  <div class="lp-item">
-                    <div class="lp-label">Total Pemakaian</div>
-                    <div class="lp-val" id="lpTotalP">0 kg</div>
-                  </div>
-                  <div class="lp-item">
-                    <div class="lp-label">Total Sampah</div>
-                    <div class="lp-val" id="lpTotalS" style="color:var(--c-danger)">0 kg</div>
-                  </div>
-                  <div class="lp-item">
-                    <div class="lp-label">Status</div>
-                    <div class="lp-val" id="lpStatus">—</div>
-                  </div>
+                  <div class="lp-item"><div class="lp-label">Total Pemakaian</div><div class="lp-val" id="lpTotalP">0 kg</div></div>
+                  <div class="lp-item"><div class="lp-label">Total Sampah</div><div class="lp-val" id="lpTotalS" style="color:var(--c-danger)">0 kg</div></div>
+                  <div class="lp-item"><div class="lp-label">Status</div><div class="lp-val" id="lpStatus">—</div></div>
                 </div>
               </div>
               <div class="modal-foot">
@@ -437,12 +415,82 @@
           </div>
         </section>
 
+        <!-- ============ ANALISA LANJUT ============ -->
+        <section class="page" id="page-analisa">
+          <div class="page-header">
+            <div>
+              <h1>Analisa Lanjut</h1>
+              <p>Insight mendalam: hari terbaik/terburuk, streak, tren mingguan, heatmap kalender, top menu, cuaca, sasaran, organik/anorganik.</p>
+            </div>
+          </div>
+
+          <!-- Insight cards -->
+          <div class="insight-grid" id="analisaInsights"></div>
+
+          <!-- Heatmap -->
+          <div class="card mt-24">
+            <div class="card-head"><div><h3>Heatmap Serapan (8 minggu terakhir)</h3><div class="sub">Hijau = baik, kuning/merah = perlu evaluasi</div></div></div>
+            <div class="card-body"><div id="heatmap"></div></div>
+          </div>
+
+          <!-- Day of Week + Weather -->
+          <div class="chart-row mt-24">
+            <div class="card">
+              <div class="card-head"><div><h3>Performa per Hari dalam Minggu</h3><div class="sub">Rata-rata serapan Sen–Min</div></div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="chartByDay"></canvas></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Pengaruh Cuaca</h3><div class="sub">Serapan vs kondisi cuaca saat distribusi</div></div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="chartWeather"></canvas></div></div>
+            </div>
+          </div>
+
+          <!-- Top Menus -->
+          <div class="chart-row mt-24">
+            <div class="card">
+              <div class="card-head"><div><h3>🏆 Menu Terbaik</h3><div class="sub">Serapan tertinggi (≥2 catatan)</div></div></div>
+              <div class="card-body" style="padding:0"><div id="topMenusHigh" class="menu-list"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>⚠️ Menu Perlu Perhatian</h3><div class="sub">Serapan terendah (≥2 catatan)</div></div></div>
+              <div class="card-body" style="padding:0"><div id="topMenusLow" class="menu-list"></div></div>
+            </div>
+          </div>
+
+          <!-- Item radar + Org vs Anorg -->
+          <div class="chart-row mt-24">
+            <div class="card">
+              <div class="card-head"><div><h3>Profil Serapan Per Item (Radar)</h3><div class="sub">Rata-rata serapan tiap item</div></div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="chartItemRadar"></canvas></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Komposisi: Organik vs Anorganik</h3><div class="sub">Hanya bila sub-kategori diisi</div></div></div>
+              <div class="card-body">
+                <div class="chart-wrap"><canvas id="chartOrgAnorg"></canvas></div>
+                <div id="orgAnorgEmpty" class="muted" style="display:none;font-size:13px;text-align:center;padding:30px">Isi field Organik/Anorganik saat input data untuk melihat breakdown</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sasaran + Alasan -->
+          <div class="chart-row mt-24">
+            <div class="card">
+              <div class="card-head"><div><h3>Performa per Sasaran Distribusi</h3><div class="sub">Rata-rata serapan tiap kelompok</div></div></div>
+              <div class="card-body"><div id="sasaranList" class="sasaran-list"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Top Alasan Sampah</h3><div class="sub">Frekuensi alasan yang paling sering</div></div></div>
+              <div class="card-body" style="padding:0"><div id="alasanList" class="alasan-list"></div></div>
+            </div>
+          </div>
+        </section>
+
         <!-- ============ GRAFIK ============ -->
         <section class="page" id="page-grafik">
           <div class="page-header">
             <div>
               <h1>Grafik Per Item</h1>
-              <p>Visualisasi pemakaian dan sampah harian untuk setiap item, dilengkapi grafik total keseluruhan.</p>
+              <p>Visualisasi pemakaian dan sampah harian untuk setiap item.</p>
             </div>
           </div>
           <div class="chart-grid" id="chartGrid"></div>
@@ -453,29 +501,17 @@
           <div class="page-header">
             <div>
               <h1>Laporan PDF</h1>
-              <p>Pilih rentang waktu, tinjau ringkasan, lalu unduh laporan PDF lengkap dengan cover, KPI, grafik, dan tabel detail.</p>
+              <p>Pilih rentang waktu, tinjau ringkasan, lalu unduh laporan PDF lengkap.</p>
             </div>
             <div class="actions">
-              <button class="btn" id="btnPrintReport">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Print
-              </button>
-              <button class="btn btn-primary" id="btnGenPdf">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Unduh PDF
-              </button>
+              <button class="btn" id="btnPrintReport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
+              <button class="btn btn-primary" id="btnGenPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh PDF</button>
             </div>
           </div>
 
           <div class="range-bar">
-            <div class="grp">
-              <label>Dari</label>
-              <input type="date" id="rFrom" />
-            </div>
-            <div class="grp">
-              <label>Sampai</label>
-              <input type="date" id="rTo" />
-            </div>
+            <div class="grp"><label>Dari</label><input type="date" id="rFrom" /></div>
+            <div class="grp"><label>Sampai</label><input type="date" id="rTo" /></div>
             <div class="quick">
               <button class="q-btn" data-range="7">7 Hari</button>
               <button class="q-btn" data-range="14">14 Hari</button>
@@ -485,138 +521,72 @@
               <button class="q-btn" data-range="lastmonth">Bulan Lalu</button>
               <button class="q-btn" data-range="all">Semua</button>
             </div>
-            <span class="row-count" id="rCount" style="margin-left:auto;">0 baris terpilih</span>
+            <span class="row-count" id="rCount" style="margin-left:auto">0 baris terpilih</span>
           </div>
 
           <div class="kpi-grid">
-            <div class="kpi k-1">
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                Hari Periode
-              </div>
-              <div class="val" id="rkDays">0</div>
-              <div class="sub2">Total hari dalam rentang</div>
-            </div>
-            <div class="kpi k-2">
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
-                Total Pemakaian
-              </div>
-              <div class="val" id="rkUse">0 kg</div>
-              <div class="sub2">Akumulasi periode</div>
-            </div>
-            <div class="kpi k-3">
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
-                Total Sampah
-              </div>
-              <div class="val" id="rkWaste">0 kg</div>
-              <div class="sub2">Akumulasi periode</div>
-            </div>
-            <div class="kpi k-4">
-              <div class="label">
-                <span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12A10 10 0 1 1 12 2v10z"/></svg></span>
-                % Serapan
-              </div>
-              <div class="val" id="rkAbsorb">—</div>
-              <div class="sub2">Periode terpilih</div>
-            </div>
+            <div class="kpi k-1"><div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></span>Hari Periode</div><div class="val" id="rkDays">0</div><div class="sub2">Total hari</div></div>
+            <div class="kpi k-2"><div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>Total Pemakaian</div><div class="val" id="rkUse">0 kg</div><div class="sub2">Akumulasi periode</div></div>
+            <div class="kpi k-3"><div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>Total Sampah</div><div class="val" id="rkWaste">0 kg</div><div class="sub2">Akumulasi periode</div></div>
+            <div class="kpi k-4"><div class="label"><span class="ico-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12A10 10 0 1 1 12 2v10z"/></svg></span>% Serapan</div><div class="val" id="rkAbsorb">—</div><div class="sub2">Periode terpilih</div></div>
           </div>
 
           <div class="chart-row">
-            <div class="card">
-              <div class="card-head"><div><h3>Tren Harian</h3><div class="sub">Pemakaian vs Sampah</div></div></div>
-              <div class="card-body"><div class="chart-wrap tall"><canvas id="reportTrend"></canvas></div></div>
-            </div>
-            <div class="card">
-              <div class="card-head"><div><h3>Komposisi</h3><div class="sub">Sampah per item</div></div></div>
-              <div class="card-body"><div class="chart-wrap tall"><canvas id="reportDonut"></canvas></div></div>
-            </div>
+            <div class="card"><div class="card-head"><div><h3>Tren Harian</h3><div class="sub">Pemakaian vs Sampah</div></div></div><div class="card-body"><div class="chart-wrap tall"><canvas id="reportTrend"></canvas></div></div></div>
+            <div class="card"><div class="card-head"><div><h3>Komposisi</h3><div class="sub">Sampah per item</div></div></div><div class="card-body"><div class="chart-wrap tall"><canvas id="reportDonut"></canvas></div></div></div>
           </div>
-
-          <div class="card">
-            <div class="card-head"><div><h3>Pemakaian vs Sampah Per Item</h3><div class="sub">Akumulasi pada periode terpilih</div></div></div>
-            <div class="card-body"><div class="chart-wrap tall"><canvas id="reportBars"></canvas></div></div>
-          </div>
-
-          <div class="card mt-24">
-            <div class="card-head"><div><h3>Ringkasan Per Item</h3><div class="sub">Status berdasarkan ambang serapan</div></div></div>
-            <div class="card-body">
-              <div class="item-grid" id="reportItemSummary"></div>
-            </div>
-          </div>
+          <div class="card"><div class="card-head"><div><h3>Pemakaian vs Sampah Per Item</h3></div></div><div class="card-body"><div class="chart-wrap tall"><canvas id="reportBars"></canvas></div></div></div>
+          <div class="card mt-24"><div class="card-head"><div><h3>Ringkasan Per Item</h3></div></div><div class="card-body"><div class="item-grid" id="reportItemSummary"></div></div></div>
         </section>
 
         <!-- ============ PANDUAN ============ -->
         <section class="page" id="page-panduan">
-          <div class="page-header">
-            <div>
-              <h1>Panduan Penggunaan</h1>
-              <p>Cara mengisi data, menafsirkan dashboard, dan membuat laporan PDF.</p>
-            </div>
-          </div>
-
-          <div class="card" data-reveal>
+          <div class="page-header"><div><h1>Panduan Penggunaan</h1><p>Cara mengisi data, menafsirkan dashboard, dan membuat laporan.</p></div></div>
+          <div class="card">
             <div class="card-head"><h3>Parameter Penilaian</h3></div>
             <div class="card-body">
               <ul style="line-height:1.9">
-                <li>Ambang minimal serapan agar status <b>Terserap</b>: <b id="pAmbang">80%</b></li>
-                <li>Ambang maksimal sampah terhadap pemakaian: <b id="pAmbang2">20%</b></li>
-                <li>Satuan input berat: <b>kilogram (kg)</b></li>
-                <li>Status <b>Terserap</b> jika % Serapan ≥ ambang minimal, sebaliknya <b>Perlu Evaluasi</b></li>
+                <li>Ambang serapan: <b id="pAmbang">80%</b></li>
+                <li>Ambang maksimal sampah: <b id="pAmbang2">20%</b></li>
+                <li>Status <b>Terserap</b> bila % Serapan ≥ ambang</li>
+                <li>Sub-kategori sampah: <b>Organik</b> (sisa makanan) &amp; <b>Anorganik</b> (kemasan)</li>
               </ul>
             </div>
           </div>
-
-          <div class="card mt-24" data-reveal>
-            <div class="card-head"><h3>Cara Pakai</h3></div>
+          <div class="card mt-24">
+            <div class="card-head"><h3>Cara Pakai Detail</h3></div>
             <div class="card-body">
               <ol style="line-height:1.9">
-                <li>Buka halaman <b>Input Harian</b>, klik <b>Tambah Data</b>.</li>
-                <li>Isi tanggal, jumlah porsi, nama menu, lalu pemakaian (kg) dan sampah (kg) per item.</li>
-                <li>Hari otomatis terisi dari tanggal. Persentase sampah, persentase serapan, dan status dihitung otomatis.</li>
-                <li>Lihat ringkasan harian + tren grafis pada halaman <b>Dashboard</b>.</li>
-                <li>Untuk laporan: buka <b>Laporan PDF</b>, pilih rentang waktu, tinjau hasilnya, lalu klik <b>Unduh PDF</b>.</li>
-                <li>Ganti ambang serapan di <b>Pengaturan</b> bila perlu.</li>
+                <li>Buka <b>Input Harian</b> → klik <b>Tambah Data</b>.</li>
+                <li>Isi <b>Informasi Hari</b> (tanggal, cuaca).</li>
+                <li>Isi <b>Distribusi</b> (target, porsi terdistribusi, hadir, sasaran).</li>
+                <li>Isi <b>Nama Menu</b> per item.</li>
+                <li>Isi <b>Pemakaian &amp; Sampah</b>. Bila ingin breakdown organik/anorganik, isi field tambahan.</li>
+                <li>Isi <b>Alasan &amp; Catatan</b> bila perlu untuk analisa lanjut.</li>
+                <li>Pantau <b>Dashboard</b>, lihat insight di <b>Analisa Lanjut</b>, unduh <b>Laporan PDF</b>.</li>
               </ol>
             </div>
           </div>
-
-          <div class="card mt-24" data-reveal>
+          <div class="card mt-24">
             <div class="card-head"><h3>Catatan Keamanan</h3></div>
             <div class="card-body">
-              <p class="muted">Aplikasi ini menyimpan data di <b>localStorage</b> browser Anda. Data tidak dikirim ke server. Untuk bekerja lintas perangkat/admin, gunakan komputer yang sama atau pertimbangkan integrasi backend.</p>
-              <p class="muted">Versi aplikasi: <code id="appVersion" style="background:var(--bg-glass);padding:2px 8px;border-radius:6px;">—</code></p>
-              <button class="btn btn-danger btn-sm" id="btnFactoryReset" style="margin-top:8px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 4 3 10 9 10"/></svg>
-                Reset Aplikasi (Factory Reset)
-              </button>
-              <div class="helper" style="margin-top:8px">Hapus semua data lokal (akun, data harian, pengaturan). Aplikasi kembali ke kondisi default.</div>
+              <p class="muted">Data tersimpan di <b>localStorage</b> browser Anda. Versi: <code id="appVersion" style="background:var(--bg-glass);padding:2px 8px;border-radius:6px">—</code></p>
+              <button class="btn btn-danger btn-sm" id="btnFactoryReset">Reset Aplikasi</button>
             </div>
           </div>
         </section>
 
         <!-- ============ PENGATURAN ============ -->
         <section class="page" id="page-settings">
-          <div class="page-header">
-            <div>
-              <h1>Pengaturan</h1>
-              <p>Atur ambang serapan, password, dan kelola admin.</p>
-            </div>
-          </div>
-
+          <div class="page-header"><div><h1>Pengaturan</h1><p>Atur ambang serapan, password, kelola admin.</p></div></div>
           <div class="chart-row">
             <div class="card">
               <div class="card-head"><h3>Ambang Serapan</h3></div>
               <div class="card-body">
-                <div class="field">
-                  <label>Ambang minimal serapan (%)</label>
-                  <input type="number" id="setAmbang" min="1" max="100" />
-                </div>
+                <div class="field"><label>Ambang minimal serapan (%)</label><input type="number" id="setAmbang" min="1" max="100" /></div>
                 <button class="btn btn-primary" id="btnSaveSetting">Simpan</button>
               </div>
             </div>
-
             <div class="card">
               <div class="card-head"><h3>Ganti Password</h3></div>
               <div class="card-body">
@@ -627,36 +597,13 @@
               </div>
             </div>
           </div>
-
           <div class="card mt-24">
-            <div class="card-head">
-              <h3>Manajemen Admin</h3>
-              <button class="btn btn-primary btn-sm" id="btnAddUser">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Tambah Admin
-              </button>
-            </div>
-            <div class="card-body" style="padding:0;">
-              <div class="table-scroll">
-                <table class="tbl" style="min-width:auto;">
-                  <thead>
-                    <tr><th>Username</th><th>Role</th><th>Dibuat</th><th>Status</th><th>Aksi</th></tr>
-                  </thead>
-                  <tbody id="userTable"></tbody>
-                </table>
-              </div>
-            </div>
+            <div class="card-head"><h3>Manajemen Admin</h3><button class="btn btn-primary btn-sm" id="btnAddUser">Tambah Admin</button></div>
+            <div class="card-body" style="padding:0"><div class="table-scroll"><table class="tbl" style="min-width:auto"><thead><tr><th>Username</th><th>Role</th><th>Dibuat</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="userTable"></tbody></table></div></div>
           </div>
-
-          <!-- ===== Modal Add User ===== -->
           <div class="modal-mask" id="userMask">
             <div class="modal">
-              <div class="modal-head">
-                <h3>Tambah Admin Baru</h3>
-                <button class="icon-btn" id="userClose" aria-label="Tutup">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
+              <div class="modal-head"><h3>Tambah Admin Baru</h3><button class="icon-btn" id="userClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
               <div class="modal-body">
                 <div class="field"><label>Username</label><input type="text" id="newUsername" /></div>
                 <div class="field"><label>Password</label><input type="password" id="newUserPw" minlength="8" /></div>
@@ -675,28 +622,24 @@
   </div>
 
   <button class="fab" id="fab" title="Tambah Data Cepat" aria-label="Tambah Data">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 
   <div class="toast-area" id="toastArea"></div>
 
-  <script src="./assets/js/utils.js?v=20260517c"></script>
-  <script src="./assets/js/auth.js?v=20260517c"></script>
-  <script src="./assets/js/store.js?v=20260517c"></script>
-  <script src="./assets/js/effects.js?v=20260517c"></script>
-  <script src="./assets/js/dashboard.js?v=20260517c"></script>
-  <script src="./assets/js/charts.js?v=20260517c"></script>
-  <script src="./assets/js/input.js?v=20260517c"></script>
-  <script src="./assets/js/pdf.js?v=20260517c"></script>
-  <script src="./assets/js/settings.js?v=20260517c"></script>
-  <script src="./assets/js/app.js?v=20260517c"></script>
+  <script src="./assets/js/utils.js?v=20260520a"></script>
+  <script src="./assets/js/auth.js?v=20260520a"></script>
+  <script src="./assets/js/store.js?v=20260520a"></script>
+  <script src="./assets/js/effects.js?v=20260520a"></script>
+  <script src="./assets/js/dashboard.js?v=20260520a"></script>
+  <script src="./assets/js/charts.js?v=20260520a"></script>
+  <script src="./assets/js/analytics.js?v=20260520a"></script>
+  <script src="./assets/js/input.js?v=20260520a"></script>
+  <script src="./assets/js/pdf.js?v=20260520a"></script>
+  <script src="./assets/js/settings.js?v=20260520a"></script>
+  <script src="./assets/js/app.js?v=20260520a"></script>
   <script>
-    // Bila app.js berhasil mount, splash dihilangkan dari runApp().
-    // Failsafe: setelah 6 detik, paksa sembunyikan splash agar tidak terjebak.
-    setTimeout(function(){
-      var s=document.getElementById('appSplash');
-      if(s) s.style.display='none';
-    }, 6000);
+    setTimeout(function(){var s=document.getElementById('appSplash');if(s)s.style.display='none';}, 6000);
   </script>
 </body>
 </html>

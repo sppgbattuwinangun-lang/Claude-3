@@ -11,7 +11,7 @@
   // naikkan angka ini. Saat berubah, semua data lama (users, session,
   // data, settings) akan dihapus dan user kembali ke kondisi default.
   // ----------------------------------------------------------------
-  U.APP_VERSION = '2.2.2';
+  U.APP_VERSION = '2.3.0';
   U.VERSION_KEY = 'mbg.app.version';
 
   // Storage namespacing

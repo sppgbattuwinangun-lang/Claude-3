@@ -331,6 +331,11 @@
     drawHeader(doc, pageW, margin, 'Tabel Detail Harian');
     drawDetailTable(doc, pageW, margin, rows, settings);
 
+    // ---- Analisa Lanjut (insight) ----
+    doc.addPage();
+    let yA = drawHeader(doc, pageW, margin, 'Analisa Lanjut (Insight)');
+    yA = drawAnalyticsSection(doc, pageW, margin, yA, rows, settings);
+
     drawFooter(doc, pageW, pageH);
 
     const stamp = (currentRange.from || 'awal') + '_sd_' + (currentRange.to || 'akhir');
@@ -679,6 +684,207 @@
   function fmtN(v) {
     if (v === null || v === undefined || v === '') return '';
     return Number(v).toLocaleString('id-ID', { maximumFractionDigits: 1 });
+  }
+
+  function drawAnalyticsSection(doc, pageW, margin, y, rows, settings) {
+    const an = S.analytics(rows, settings);
+    const ambang = Math.round(settings.ambangSerapan * 100);
+
+    // ---------- Insight cards row ----------
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 30, 50);
+    doc.text('Ringkasan Insight', margin, y);
+    y += 10;
+
+    const cards = [];
+    if (an.bestDay) cards.push({ label: 'HARI TERBAIK', val: (an.bestDay.serapan*100).toFixed(1)+'%', sub: U.fmtDate(an.bestDay.tanggal), color: [16,185,129] });
+    if (an.worstDay) cards.push({ label: 'HARI PALING BOROS', val: (an.worstDay.serapan*100).toFixed(1)+'%', sub: U.fmtDate(an.worstDay.tanggal), color: [245,158,11] });
+    cards.push({ label: 'STREAK SAAT INI', val: an.currentStreak + ' hari', sub: 'Berturut-turut Terserap', color: [236,72,153] });
+    cards.push({ label: 'REKOR TERLAMA', val: an.longestStreak + ' hari', sub: 'Streak terlama', color: [139,92,246] });
+    if (an.trendDelta !== null) {
+      const up = an.trendDelta >= 0;
+      cards.push({ label: 'TREN MINGGUAN', val: (up?'+':'') + (an.trendDelta*100).toFixed(1)+'%', sub: 'vs minggu lalu', color: up?[16,185,129]:[239,68,68] });
+    }
+    cards.push({ label: 'TOTAL HARI', val: String(an.totalRows), sub: 'Tercatat', color: [99,102,241] });
+
+    const cardsPerRow = 3;
+    const cardW = (pageW - margin*2 - (cardsPerRow-1)*8) / cardsPerRow;
+    const cardH = 56;
+    cards.forEach((c, i) => {
+      const col = i % cardsPerRow;
+      const row = Math.floor(i / cardsPerRow);
+      const x = margin + col * (cardW + 8);
+      const yy = y + row * (cardH + 8);
+      doc.setFillColor(248, 249, 252);
+      doc.roundedRect(x, yy, cardW, cardH, 8, 8, 'F');
+      doc.setFillColor(c.color[0], c.color[1], c.color[2]);
+      doc.roundedRect(x, yy, 3, cardH, 1.5, 1.5, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(120,120,140);
+      doc.text(c.label, x + 10, yy + 14);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(30,30,50);
+      doc.text(c.val, x + 10, yy + 32);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120,120,140);
+      doc.text(c.sub, x + 10, yy + 46);
+    });
+    y += Math.ceil(cards.length / cardsPerRow) * (cardH + 8) + 12;
+
+    // ---------- Performa per hari minggu ----------
+    if (Object.values(an.byDayOfWeek).some(o => o.count > 0)) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Performa per Hari', margin, y);
+      y += 6;
+      const head = [['Hari', 'Hari Tercatat', 'Hari Terserap', 'Rata-rata Serapan']];
+      const body = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'].map(d => {
+        const o = an.byDayOfWeek[d];
+        return [d, o.count, o.ok, o.avg !== null ? (o.avg*100).toFixed(1)+'%' : '—'];
+      });
+      doc.autoTable({
+        head, body, startY: y + 4,
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [99,102,241], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 9 }
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // ---------- Top menu (high & low) ----------
+    if (an.topMenusHigh.length || an.topMenusLow.length) {
+      if (y > 700) { doc.addPage(); y = drawHeader(doc, pageW, margin, 'Analisa Lanjut (lanjutan)'); }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Top Menu Terbaik (5 teratas)', margin, y);
+      y += 6;
+      const headTop = [['Rank', 'Item', 'Menu', 'Hari', 'Rata2 Serapan']];
+      const bodyTop = an.topMenusHigh.map((m, i) => [i+1, m.item, m.menu, m.count, (m.avg*100).toFixed(1)+'%']);
+      if (bodyTop.length) {
+        doc.autoTable({
+          head: headTop, body: bodyTop, startY: y + 4,
+          margin: { left: margin, right: margin },
+          theme: 'grid',
+          headStyles: { fillColor: [16,185,129], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 9 }
+        });
+        y = doc.lastAutoTable.finalY + 8;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Menu Perlu Perhatian (5 terbawah)', margin, y);
+      y += 6;
+      const bodyLow = an.topMenusLow.map((m, i) => [i+1, m.item, m.menu, m.count, (m.avg*100).toFixed(1)+'%']);
+      if (bodyLow.length) {
+        doc.autoTable({
+          head: headTop, body: bodyLow, startY: y + 4,
+          margin: { left: margin, right: margin },
+          theme: 'grid',
+          headStyles: { fillColor: [245,158,11], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 9 }
+        });
+        y = doc.lastAutoTable.finalY + 10;
+      }
+    }
+
+    // ---------- Cuaca + Sasaran ----------
+    if (Object.keys(an.byWeather).length) {
+      if (y > 700) { doc.addPage(); y = drawHeader(doc, pageW, margin, 'Analisa Lanjut (lanjutan)'); }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Pengaruh Cuaca', margin, y);
+      y += 6;
+      const head = [['Cuaca', 'Hari', 'Rata-rata Serapan']];
+      const body = Object.values(an.byWeather)
+        .sort((a,b) => b.avg - a.avg)
+        .map(w => [w.label, w.count, (w.avg*100).toFixed(1)+'%']);
+      doc.autoTable({
+        head, body, startY: y + 4,
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [56,189,248], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 9 }
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    if (Object.keys(an.bySasaran).length) {
+      if (y > 700) { doc.addPage(); y = drawHeader(doc, pageW, margin, 'Analisa Lanjut (lanjutan)'); }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Performa per Sasaran Distribusi', margin, y);
+      y += 6;
+      const head = [['Sasaran', 'Hari', 'Rata-rata Serapan']];
+      const body = Object.values(an.bySasaran)
+        .sort((a,b) => b.avg - a.avg)
+        .map(s => [s.label, s.count, (s.avg*100).toFixed(1)+'%']);
+      doc.autoTable({
+        head, body, startY: y + 4,
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [168,139,250], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 9 }
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // ---------- Organik vs Anorganik ----------
+    if (an.orgVsAnorg.hasSub) {
+      if (y > 720) { doc.addPage(); y = drawHeader(doc, pageW, margin, 'Analisa Lanjut (lanjutan)'); }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Komposisi Sampah: Organik vs Anorganik', margin, y);
+      y += 6;
+      const total = an.orgVsAnorg.org + an.orgVsAnorg.anorg;
+      const head = [['Kategori', 'Total (kg)', '% Komposisi']];
+      const body = [
+        ['Organik (sisa makanan)', an.orgVsAnorg.org.toFixed(2), total > 0 ? (an.orgVsAnorg.org/total*100).toFixed(1)+'%' : '—'],
+        ['Anorganik (kemasan/lain)', an.orgVsAnorg.anorg.toFixed(2), total > 0 ? (an.orgVsAnorg.anorg/total*100).toFixed(1)+'%' : '—'],
+        [{ content: 'TOTAL', styles: { fontStyle: 'bold' } }, { content: total.toFixed(2), styles: { fontStyle: 'bold' } }, { content: '100%', styles: { fontStyle: 'bold' } }]
+      ];
+      doc.autoTable({
+        head, body, startY: y + 4,
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [22,163,74], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 9 }
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // ---------- Top Alasan Sampah ----------
+    const alasanArr = Object.entries(an.alasanFreq).sort((a,b) => b[1]-a[1]);
+    if (alasanArr.length) {
+      if (y > 720) { doc.addPage(); y = drawHeader(doc, pageW, margin, 'Analisa Lanjut (lanjutan)'); }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 50);
+      doc.text('Top Alasan Sampah', margin, y);
+      y += 6;
+      const body = alasanArr.slice(0, 8).map(([a, c]) => [a, c]);
+      doc.autoTable({
+        head: [['Alasan', 'Frekuensi']], body, startY: y + 4,
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [239,68,68], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 9 }
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    return y;
   }
 
   function drawGradientRect(doc, x, y, w, h, c1, c2) {

@@ -150,10 +150,11 @@
     });
 
     // Navigation
-    const PAGES = ['dashboard','input','grafik','laporan','panduan','settings'];
+    const PAGES = ['dashboard','input','analisa','grafik','laporan','panduan','settings'];
     const PAGE_TITLES = {
       dashboard: 'Dashboard',
       input: 'Input Harian',
+      analisa: 'Analisa Lanjut',
       grafik: 'Grafik Per Item',
       laporan: 'Laporan PDF',
       panduan: 'Panduan',
@@ -175,6 +176,7 @@
 
       if (page === 'dashboard') safe(() => NS.dashboard.render(), 'go:dashboard');
       if (page === 'input')     safe(() => NS.input.render(),     'go:input');
+      if (page === 'analisa')   safe(() => NS.analytics && NS.analytics.render(), 'go:analytics');
       if (page === 'grafik')    safe(() => NS.charts.render(),    'go:charts');
       if (page === 'laporan')   safe(() => NS.pdf && NS.pdf.renderPreview(), 'go:pdf');
       if (page === 'settings')  safe(() => NS.settings.renderUsers(), 'go:settings');
@@ -200,6 +202,7 @@
     safe(() => NS.dashboard.init(), 'init:dashboard');
     safe(() => NS.input.init(),     'init:input');
     safe(() => NS.charts.init(),    'init:charts');
+    safe(() => NS.analytics && NS.analytics.init && NS.analytics.init(), 'init:analytics');
     safe(() => NS.pdf && NS.pdf.init && NS.pdf.init(), 'init:pdf');
     safe(() => NS.settings.init(),  'init:settings');
 
@@ -225,6 +228,7 @@
       safe(() => NS.dashboard.render(),  'render:dashboard');
       safe(() => NS.input.render(),      'render:input');
       safe(() => NS.charts.render(),     'render:charts');
+      safe(() => NS.analytics && NS.analytics.render(), 'render:analytics');
       safe(() => NS.pdf && NS.pdf.renderPreview(), 'render:pdf');
       flashLive();
       if (msg && msg.payload && msg.payload.source === 'storage') {
