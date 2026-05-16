@@ -8,26 +8,73 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20260516" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20260517a" />
   <script>
-    // Error overlay paling awal
+    // Pre-script diagnostics — pasang sebelum library lain di-load
     window.addEventListener('error', function (e) {
-      try {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#fee2e2;color:#991b1b;padding:14px 20px;font:13px/1.5 -apple-system,sans-serif;z-index:99999;border-bottom:2px solid #ef4444';
-        d.innerHTML = '<b>Error JS:</b> ' + (e.message || e.error) + '<br><small>File: ' + (e.filename || '-') + ' baris ' + (e.lineno || '?') + '</small>';
-        (document.body || document.documentElement).appendChild(d);
-      } catch (ex) {}
-    });
-    try { var s = localStorage.getItem('mbg.session'); if (s) JSON.parse(s); } catch (e) { localStorage.removeItem('mbg.session'); }
+      // Coba sembunyikan splash dan tampilkan error visible (sebelum app.js sempat load)
+      var fb = document.getElementById('boot-fallback');
+      if (fb) {
+        fb.classList.remove('hidden');
+        var msg = (e.message || (e.error && e.error.message) || 'Unknown error') +
+                  '\nFile: ' + (e.filename || '-') + ' line ' + (e.lineno || '?');
+        var pre = document.getElementById('boot-fallback-msg');
+        if (pre) pre.textContent = msg;
+      }
+    }, true);
+    try { var s = localStorage.getItem('mbg.session'); if (s) JSON.parse(s); }
+    catch (e) { try { localStorage.removeItem('mbg.session'); } catch (e2) {} }
   </script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <!-- jsPDF + autotable for PDF report -->
+  <!-- jsPDF + autotable -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
+  <noscript>
+    <div style="padding:24px;background:#fee2e2;color:#991b1b;font-family:sans-serif;font-weight:700">
+      Aplikasi memerlukan JavaScript aktif. Mohon aktifkan JavaScript di browser Anda.
+    </div>
+  </noscript>
+
+  <!-- Splash sebelum app.js mount -->
+  <div id="appSplash" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0a0a1a;color:#fff;font-family:Inter,system-ui,sans-serif">
+    <div style="text-align:center;max-width:420px;padding:24px">
+      <div style="width:64px;height:64px;margin:0 auto 18px;border-radius:18px;background:linear-gradient(135deg,#6366f1,#ec4899);display:grid;place-items:center;font-size:30px;font-weight:800;box-shadow:0 12px 32px rgba(99,102,241,.5)">M</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px">MBG Monitor</div>
+      <div style="color:#94a3b8;font-size:13px;margin-bottom:18px">Memuat dashboard…</div>
+      <div style="width:120px;height:6px;margin:0 auto;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+        <div style="height:100%;background:linear-gradient(90deg,#6366f1,#ec4899);border-radius:99px;animation:splashbar 1.6s ease-in-out infinite"></div>
+      </div>
+    </div>
+    <style>
+      @keyframes splashbar {
+        0% { width: 0%; transform: translateX(0); }
+        50% { width: 80%; }
+        100% { width: 100%; transform: translateX(100%); }
+      }
+    </style>
+  </div>
+
+  <!-- Boot fallback bila JS error -->
+  <div id="boot-fallback" class="hidden" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,10,30,.95);backdrop-filter:blur(8px);color:#fff;padding:24px;font-family:Inter,system-ui,sans-serif">
+    <div style="max-width:520px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:28px">
+      <div style="font-size:42px">⚠️</div>
+      <h2 style="margin:8px 0 4px 0;font-size:20px;font-weight:700">Aplikasi gagal dimuat</h2>
+      <p style="color:#cbd5e1;font-size:13px;line-height:1.55;margin:0 0 14px 0">Terjadi error saat memuat script. Coba reset aplikasi atau muat ulang halaman.</p>
+      <pre id="boot-fallback-msg" style="background:rgba(0,0,0,.4);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 14px;font-family:monospace;font-size:12px;color:#fca5a5;max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0"></pre>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+        <button onclick="location.reload()" style="flex:1;min-width:140px;padding:11px 16px;border-radius:12px;border:0;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-weight:600;cursor:pointer">Muat Ulang</button>
+        <button onclick="(function(){for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.startsWith('mbg.'))localStorage.removeItem(k);}location.replace('./login.html')})()" style="flex:1;min-width:140px;padding:11px 16px;border-radius:12px;border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.1);color:#fca5a5;font-weight:600;cursor:pointer">Reset Aplikasi</button>
+        <a href="./login.html" style="flex:1;min-width:140px;padding:11px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);text-align:center;color:#cbd5e1;font-weight:600;text-decoration:none">Ke Login</a>
+      </div>
+    </div>
+  </div>
+
   <div class="bg-grid"></div>
 
   <div class="app">
@@ -122,7 +169,7 @@
             <p>Mulai isi data harian monitoring sampah pasca distribusi MBG. Data akan otomatis tercatat dan grafik akan terisi seketika.</p>
             <div class="actions">
               <button class="btn btn-primary" id="btnEmptyAdd">Tambah Data Sekarang</button>
-              <button class="btn" id="btnEmptySample">Muat Data Contoh (30 hari)</button>
+              <button class="btn" id="btnEmptySample">Muat Data Contoh (1 hari)</button>
             </div>
           </div>
 
@@ -244,6 +291,10 @@
               <button class="btn btn-primary" id="btnAdd">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 Tambah Data
+              </button>
+              <button class="btn" id="btnLoadSample" title="Tambah 1 hari data contoh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 4l-10 10-3-3"/></svg>
+                Data Contoh
               </button>
               <button class="btn btn-danger" id="btnReset" title="Hapus semua data">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
@@ -405,7 +456,6 @@
             </div>
           </div>
 
-          <!-- Range bar -->
           <div class="range-bar">
             <div class="grp">
               <label>Dari</label>
@@ -427,7 +477,6 @@
             <span class="row-count" id="rCount" style="margin-left:auto;">0 baris terpilih</span>
           </div>
 
-          <!-- KPI preview -->
           <div class="kpi-grid">
             <div class="kpi k-1">
               <div class="label">
@@ -463,7 +512,6 @@
             </div>
           </div>
 
-          <!-- Charts preview -->
           <div class="chart-row">
             <div class="card">
               <div class="card-head"><div><h3>Tren Harian</h3><div class="sub">Pemakaian vs Sampah</div></div></div>
@@ -480,7 +528,6 @@
             <div class="card-body"><div class="chart-wrap tall"><canvas id="reportBars"></canvas></div></div>
           </div>
 
-          <!-- Item summary cards -->
           <div class="card mt-24">
             <div class="card-head"><div><h3>Ringkasan Per Item</h3><div class="sub">Status berdasarkan ambang serapan</div></div></div>
             <div class="card-body">
@@ -528,6 +575,12 @@
             <div class="card-head"><h3>Catatan Keamanan</h3></div>
             <div class="card-body">
               <p class="muted">Aplikasi ini menyimpan data di <b>localStorage</b> browser Anda. Data tidak dikirim ke server. Untuk bekerja lintas perangkat/admin, gunakan komputer yang sama atau pertimbangkan integrasi backend.</p>
+              <p class="muted">Versi aplikasi: <code id="appVersion" style="background:var(--bg-glass);padding:2px 8px;border-radius:6px;">—</code></p>
+              <button class="btn btn-danger btn-sm" id="btnFactoryReset" style="margin-top:8px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 4 3 10 9 10"/></svg>
+                Reset Aplikasi (Factory Reset)
+              </button>
+              <div class="helper" style="margin-top:8px">Hapus semua data lokal (akun, data harian, pengaturan). Aplikasi kembali ke kondisi default.</div>
             </div>
           </div>
         </section>
@@ -610,23 +663,29 @@
     </section>
   </div>
 
-  <!-- Floating Action Button -->
   <button class="fab" id="fab" title="Tambah Data Cepat" aria-label="Tambah Data">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 
   <div class="toast-area" id="toastArea"></div>
 
-  <!-- Scripts (urutan penting) -->
-  <script src="./assets/js/utils.js?v=20260516"></script>
-  <script src="./assets/js/auth.js?v=20260516"></script>
-  <script src="./assets/js/store.js?v=20260516"></script>
-  <script src="./assets/js/effects.js?v=20260516"></script>
-  <script src="./assets/js/dashboard.js?v=20260516"></script>
-  <script src="./assets/js/charts.js?v=20260516"></script>
-  <script src="./assets/js/input.js?v=20260516"></script>
-  <script src="./assets/js/pdf.js?v=20260516"></script>
-  <script src="./assets/js/settings.js?v=20260516"></script>
-  <script src="./assets/js/app.js?v=20260516"></script>
+  <script src="./assets/js/utils.js?v=20260517a"></script>
+  <script src="./assets/js/auth.js?v=20260517a"></script>
+  <script src="./assets/js/store.js?v=20260517a"></script>
+  <script src="./assets/js/effects.js?v=20260517a"></script>
+  <script src="./assets/js/dashboard.js?v=20260517a"></script>
+  <script src="./assets/js/charts.js?v=20260517a"></script>
+  <script src="./assets/js/input.js?v=20260517a"></script>
+  <script src="./assets/js/pdf.js?v=20260517a"></script>
+  <script src="./assets/js/settings.js?v=20260517a"></script>
+  <script src="./assets/js/app.js?v=20260517a"></script>
+  <script>
+    // Bila app.js berhasil mount, splash dihilangkan dari runApp().
+    // Failsafe: setelah 6 detik, paksa sembunyikan splash agar tidak terjebak.
+    setTimeout(function(){
+      var s=document.getElementById('appSplash');
+      if(s) s.style.display='none';
+    }, 6000);
+  </script>
 </body>
 </html>

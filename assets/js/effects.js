@@ -81,29 +81,49 @@
 
   // ---------- Reveal on scroll ----------
   // Add class .revealed when element enters viewport.
+  // PHILOSOPHY: elements are visible by default. We only ANIMATE
+  // them in by quickly fading; failure to observe = still visible.
   E.installReveal = function () {
-    if (!('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.classList.add('revealed');
-          io.unobserve(e.target);
-        }
-      });
-    }, { rootMargin: '0px 0px -40px 0px', threshold: 0.05 });
-    document.querySelectorAll('[data-reveal]').forEach(el => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(14px)';
-      el.style.transition = 'opacity .55s var(--t-base, ease), transform .55s var(--t-base, ease)';
-      io.observe(el);
-    });
-    // CSS for revealed
+    const targets = document.querySelectorAll('[data-reveal]');
+    if (!targets.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      // Browser tidak support — biarkan terlihat (default).
+      return;
+    }
+
+    // Tambah CSS sekali saja
     if (!document.getElementById('reveal-style')) {
       const s = document.createElement('style');
       s.id = 'reveal-style';
-      s.textContent = '[data-reveal].revealed{opacity:1!important;transform:translateY(0)!important}';
+      s.textContent = `
+        [data-reveal][data-anim="0"] { opacity: 0; transform: translateY(14px); }
+        [data-reveal][data-anim="1"] {
+          opacity: 1; transform: translateY(0);
+          transition: opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1);
+        }
+      `;
       document.head.appendChild(s);
     }
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.setAttribute('data-anim', '1');
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -20px 0px', threshold: 0.01 });
+
+    targets.forEach(el => {
+      el.setAttribute('data-anim', '0');
+      io.observe(el);
+    });
+
+    // FAILSAFE: setelah 700ms, paksa semua jadi visible.
+    setTimeout(() => {
+      targets.forEach(el => el.setAttribute('data-anim', '1'));
+    }, 700);
   };
 
   // ---------- Card tilt ----------

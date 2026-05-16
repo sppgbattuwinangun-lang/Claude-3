@@ -32,7 +32,8 @@
   };
 
   S.getAll = function () {
-    return U.read(U.K.DATA, []);
+    const r = U.read(U.K.DATA, []);
+    return Array.isArray(r) ? r : [];
   };
   S.saveAll = function (rows) {
     U.write(U.K.DATA, rows);
@@ -76,8 +77,8 @@
     S.saveAll([]);
   };
 
+  // ---------- Compute ----------
   // Hitung metrik untuk satu baris
-  // record: { tanggal, hari, porsi, menu_*, *_p, *_s }
   S.compute = function (rec, settings) {
     settings = settings || S.getSettings();
     const out = Object.assign({}, rec);
@@ -122,7 +123,7 @@
     return Number(v);
   }
 
-  // Agregasi: total per item, total keseluruhan
+  // ---------- Aggregate ----------
   S.aggregate = function (rows, settings) {
     settings = settings || S.getSettings();
     const agg = { perItem: {}, total: { p: 0, s: 0, days: 0, daysOk: 0 } };
@@ -149,7 +150,6 @@
         }
       }
     });
-    // derived
     Object.values(agg.perItem).forEach(it => {
       it.pctSampah  = it.p > 0 ? it.s / it.p : null;
       it.pctSerapan = it.p > 0 ? 1 - it.s / it.p : null;
@@ -162,81 +162,80 @@
     return agg;
   };
 
-  // Sample data bila kosong (agar dashboard tidak kosong saat pertama kali dipakai)
-  // Default 30 hari, menu sesuai pola Excel SPPG (Nasi Putih, Telur, Sayur Tumis, Tempe, Pisang)
-  // Variasi sengaja dibuat agar ada hari "Terserap" dan "Perlu Evaluasi"
+  // ---------- Sample data generator ----------
+  // days = jumlah hari (default 1). Menu sesuai pola SPPG.
   S.loadSample = function (days) {
-    days = days || 30;
+    days = days || 1;
     const today = new Date();
-    const rows = [];
+    const rows = S.getAll();
     const menus = [
-      { nasi:'Nasi Putih', hewani:'Telur',          sayur:'Sayur Tumis',     nabati:'Tempe',          buah:'Pisang' },
-      { nasi:'Nasi Putih', hewani:'Ayam Bakar',     sayur:'Sop Sayur',       nabati:'Tahu',           buah:'Jeruk' },
-      { nasi:'Nasi Putih', hewani:'Ikan Goreng',    sayur:'Cap Cay',         nabati:'Tempe Goreng',   buah:'Apel' },
-      { nasi:'Nasi Kuning',hewani:'Daging Sapi',    sayur:'Bayam Bening',    nabati:'Tahu Bacem',     buah:'Semangka' },
-      { nasi:'Nasi Putih', hewani:'Telur Balado',   sayur:'Tumis Kangkung',  nabati:'Tempe Mendoan',  buah:'Pepaya' },
-      { nasi:'Nasi Putih', hewani:'Ayam Goreng',    sayur:'Sayur Asem',      nabati:'Tahu Goreng',    buah:'Melon' },
-      { nasi:'Nasi Putih', hewani:'Ikan Bakar',     sayur:'Tumis Buncis',    nabati:'Tempe Bacem',    buah:'Mangga' },
-      { nasi:'Nasi Putih', hewani:'Rendang',        sayur:'Sayur Lodeh',     nabati:'Tahu Isi',       buah:'Salak' },
-      { nasi:'Nasi Putih', hewani:'Telur Dadar',    sayur:'Tumis Wortel',    nabati:'Tempe Orek',     buah:'Anggur' },
-      { nasi:'Nasi Putih', hewani:'Ayam Suwir',     sayur:'Sup Jagung',      nabati:'Tahu Sutera',    buah:'Pir' }
+      { nasi:'Nasi Putih', hewani:'Telur Balado',   sayur:'Sayur Tumis',     nabati:'Tempe Goreng',   buah:'Pisang' },
+      { nasi:'Nasi Putih', hewani:'Ayam Bakar',     sayur:'Sop Sayur',       nabati:'Tahu Bacem',     buah:'Jeruk' },
+      { nasi:'Nasi Putih', hewani:'Ikan Goreng',    sayur:'Cap Cay',         nabati:'Tempe Mendoan',  buah:'Apel' },
+      { nasi:'Nasi Kuning',hewani:'Daging Sapi',    sayur:'Bayam Bening',    nabati:'Tahu Goreng',    buah:'Semangka' },
+      { nasi:'Nasi Putih', hewani:'Ayam Goreng',    sayur:'Sayur Asem',      nabati:'Tahu Isi',       buah:'Pepaya' },
+      { nasi:'Nasi Putih', hewani:'Ikan Bakar',     sayur:'Tumis Buncis',    nabati:'Tempe Bacem',    buah:'Melon' },
+      { nasi:'Nasi Putih', hewani:'Rendang',        sayur:'Sayur Lodeh',     nabati:'Tahu Sutera',    buah:'Mangga' }
     ];
+    const round1 = (n) => Math.round(n * 10) / 10;
+
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today.getTime() - i * 86400000);
-      const dayIdx = days - 1 - i;
-      const m = menus[dayIdx % menus.length];
+      const idx = (days - 1 - i) % menus.length;
+      const m = menus[idx];
       const tanggal = d.toISOString().slice(0, 10);
       const porsi = 3000 + Math.round(Math.random() * 800);
 
-      // Buat 3 variasi: ~70% terserap baik, ~20% perlu evaluasi, ~10% serapan tinggi
-      const r = Math.random();
-      let factor;
-      if (r < 0.20) {
-        // Hari kurang baik (serapan ~60-78%, masuk Perlu Evaluasi)
-        factor = 0.22 + Math.random() * 0.16;
-      } else if (r < 0.85) {
-        // Hari normal (serapan ~80-92%)
-        factor = 0.08 + Math.random() * 0.12;
-      } else {
-        // Hari sangat baik (serapan >92%)
-        factor = 0.02 + Math.random() * 0.06;
-      }
+      // Hari normal: serapan 82-92%
+      const factor = 0.08 + Math.random() * 0.10;
 
-      const round1 = (n) => Math.round(n * 10) / 10;
       const rec = {
         tanggal, hari: U.dayName(tanggal), porsi,
         menu_nasi: m.nasi, menu_hewani: m.hewani, menu_sayur: m.sayur, menu_nabati: m.nabati, menu_buah: m.buah,
-        nasi_p:   round1(200 + Math.random() * 30),
-        hewani_p: round1(140 + Math.random() * 20),
-        sayur_p:  round1(180 + Math.random() * 30),
-        nabati_p: round1(90  + Math.random() * 15),
-        buah_p:   round1(120 + Math.random() * 20)
+        nasi_p:   round1(210 + Math.random() * 30),
+        hewani_p: round1(150 + Math.random() * 20),
+        sayur_p:  round1(200 + Math.random() * 30),
+        nabati_p: round1(95  + Math.random() * 15),
+        buah_p:   round1(130 + Math.random() * 20)
       };
-      // Sampah = pemakaian × factor (per item, dengan sedikit variasi)
-      rec.nasi_s   = round1(rec.nasi_p   * (factor + (Math.random() - 0.5) * 0.04));
-      rec.hewani_s = round1(rec.hewani_p * (factor + (Math.random() - 0.5) * 0.04));
-      rec.sayur_s  = round1(rec.sayur_p  * (factor + (Math.random() - 0.5) * 0.04));
-      rec.nabati_s = round1(rec.nabati_p * (factor + (Math.random() - 0.5) * 0.04));
-      rec.buah_s   = round1(rec.buah_p   * (factor + (Math.random() - 0.5) * 0.04));
-      // Pastikan tidak negatif
-      ['nasi_s','hewani_s','sayur_s','nabati_s','buah_s'].forEach(k => { if (rec[k] < 0) rec[k] = 0; });
-
+      rec.nasi_s   = Math.max(0, round1(rec.nasi_p   * (factor + (Math.random() - 0.5) * 0.04)));
+      rec.hewani_s = Math.max(0, round1(rec.hewani_p * (factor + (Math.random() - 0.5) * 0.04)));
+      rec.sayur_s  = Math.max(0, round1(rec.sayur_p  * (factor + (Math.random() - 0.5) * 0.04)));
+      rec.nabati_s = Math.max(0, round1(rec.nabati_p * (factor + (Math.random() - 0.5) * 0.04)));
+      rec.buah_s   = Math.max(0, round1(rec.buah_p   * (factor + (Math.random() - 0.5) * 0.04)));
       rec.id = U.uuid();
       rec.createdAt = Date.now();
       rows.push(rec);
     }
     S.saveAll(rows);
-    return rows.length;
+    return days;
   };
 
-  // Auto-seed dimatikan: aplikasi tidak lagi memuat data contoh otomatis.
-  // User input data secara manual lewat form. Fungsi loadSample() tetap tersedia
-  // jika sewaktu-waktu admin ingin mencoba dengan data dummy.
+  // ---------- Auto-seed 1 hari pada install pertama ----------
+  // Aktif kembali untuk fresh install agar dashboard tidak kosong total.
+  // Setelah seed pertama kali, flag tersimpan dan tidak akan auto-load lagi
+  // walaupun user menghapus semua data.
   S.autoSeedIfEmpty = function () {
-    return false;
+    let already;
+    try { already = localStorage.getItem(U.K.SEED); } catch (e) { already = null; }
+    if (already) return false;
+    if (S.getAll().length > 0) {
+      try { localStorage.setItem(U.K.SEED, '1'); } catch (e) {}
+      return false;
+    }
+    S.loadSample(1);
+    try { localStorage.setItem(U.K.SEED, '1'); } catch (e) {}
+    return true;
   };
 
-  // Filter records berdasarkan rentang tanggal (inklusif). Format: ISO 'YYYY-MM-DD'.
+  // Force seed: tambah 1 hari data, abaikan flag (untuk tombol manual)
+  S.forceSeedOne = function () {
+    S.loadSample(1);
+    try { localStorage.setItem(U.K.SEED, '1'); } catch (e) {}
+    return true;
+  };
+
+  // ---------- Filter helpers ----------
   S.filterByRange = function (rows, from, to) {
     rows = rows || S.getAll();
     return rows.filter(r => {
@@ -248,7 +247,6 @@
     });
   };
 
-  // Helper: dapatkan rentang tanggal min/max dari semua data
   S.getDateRange = function () {
     const rows = S.getAll();
     if (!rows.length) return { min: null, max: null };
