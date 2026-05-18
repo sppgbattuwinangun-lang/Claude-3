@@ -245,3 +245,16 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+
+
+/* === Additional styles === */
+.btn-outline-purple { color: #7c3aed; border-color: #7c3aed; }
+.btn-outline-purple:hover { background: #7c3aed; color: #fff; }
+.sync-online { background: #d1fae5; color: #059669; }
+.sync-offline { background: #fef3c7; color: #92400e; }
+.kat-manage-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.kat-manage-row:last-child { border: none; }

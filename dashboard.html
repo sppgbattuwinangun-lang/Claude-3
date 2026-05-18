@@ -98,13 +98,25 @@
 <div class="page-toolbar">
 <div class="d-flex gap-2 flex-wrap">
 <button class="btn btn-primary" id="btnAddMaster"><i class="fas fa-plus me-2"></i>Tambah Bahan</button>
+<button class="btn btn-outline-purple" id="btnAddKategori"><i class="fas fa-folder-plus me-2"></i>Kelola Kategori</button>
 <button class="btn btn-outline-success" id="btnImportMaster"><i class="fas fa-file-excel me-2"></i>Import Excel</button>
 <button class="btn btn-outline-info" id="btnExportMaster"><i class="fas fa-download me-2"></i>Export</button>
 </div>
 <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="searchMaster" placeholder="Cari bahan makanan..."></div>
 </div>
-<div class="panel mt-3">
+<div class="row g-4 mt-2">
+<div class="col-lg-9">
+<div class="panel">
+<div class="panel-head"><h6><i class="fas fa-boxes me-2"></i>Daftar Bahan Makanan</h6></div>
 <div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>Kategori</th><th>Bahan Makanan</th><th>Satuan</th><th>Aksi</th></tr></thead><tbody id="tbMaster"><tr><td colspan="5" class="empty-td">Memuat...</td></tr></tbody></table></div>
+</div>
+</div>
+<div class="col-lg-3">
+<div class="panel">
+<div class="panel-head"><h6><i class="fas fa-layer-group me-2"></i>Daftar Kategori</h6></div>
+<div id="kategoriListManage"></div>
+</div>
+</div>
 </div>
 </section>
 
@@ -125,16 +137,24 @@
 <!-- Page: Settings -->
 <section class="page" id="pg-settings">
 <div class="row g-4">
-<div class="col-md-6"><div class="panel"><div class="panel-head"><h6><i class="fas fa-sync me-2"></i>Sinkronisasi Data</h6></div>
-<p class="text-muted small mb-3">Untuk menyinkronkan data antar device yang berbeda, gunakan fitur Export & Import di bawah ini. Export data dari device pertama, lalu Import di device kedua.</p>
-<div class="d-flex gap-2 flex-wrap">
-<button class="btn btn-primary" id="btnSyncExport"><i class="fas fa-cloud-upload-alt me-2"></i>Export Data (Backup)</button>
-<button class="btn btn-outline-primary" id="btnSyncImport"><i class="fas fa-cloud-download-alt me-2"></i>Import Data (Restore)</button>
-<input type="file" id="syncFile" accept=".json" class="d-none">
+<div class="col-md-6"><div class="panel"><div class="panel-head"><h6><i class="fas fa-cloud me-2"></i>Cloud Sync (Antar Device)</h6></div>
+<p class="text-muted small mb-3">Data otomatis tersimpan di cloud. Login dengan akun yang sama di device berbeda akan mendapat data yang sama.</p>
+<div class="info-rows mb-3">
+<div class="info-row"><span>Cloud Bin ID</span><strong id="infoCloudId">-</strong></div>
+<div class="info-row"><span>Terakhir Sync</span><strong id="infoLastSync">-</strong></div>
 </div>
-<div class="alert alert-info mt-3 small"><i class="fas fa-info-circle me-1"></i><strong>Cara Sync:</strong> Export JSON dari device A → kirim file ke device B → Import di device B. Data akan langsung sama.</div>
+<div class="d-flex gap-2 flex-wrap mb-3">
+<button class="btn btn-sm btn-primary" id="btnCloudPush"><i class="fas fa-cloud-upload-alt me-1"></i>Upload ke Cloud</button>
+<button class="btn btn-sm btn-outline-primary" id="btnCloudPull"><i class="fas fa-cloud-download-alt me-1"></i>Download dari Cloud</button>
+</div>
+<div class="d-flex gap-2 flex-wrap">
+<button class="btn btn-sm btn-outline-warning" id="btnConnectBin"><i class="fas fa-link me-1"></i>Hubungkan ke Device Lain</button>
+<button class="btn btn-sm btn-outline-secondary" id="btnResetBin"><i class="fas fa-redo me-1"></i>Reset Bin</button>
+</div>
+<div class="alert alert-info mt-3 small"><i class="fas fa-info-circle me-1"></i><strong>Cara Sync Antar Device:</strong><br>1. Di device pertama, catat Cloud Bin ID di atas<br>2. Di device kedua, klik "Hubungkan ke Device Lain"<br>3. Masukkan Bin ID → data langsung sama!</div>
 </div></div>
-<div class="col-md-6"><div class="panel"><div class="panel-head"><h6><i class="fas fa-user-shield me-2"></i>Informasi Akun</h6></div>
+<div class="col-md-6">
+<div class="panel mb-3"><div class="panel-head"><h6><i class="fas fa-user-shield me-2"></i>Informasi Akun</h6></div>
 <div class="info-rows">
 <div class="info-row"><span>Username</span><strong id="infoUser">-</strong></div>
 <div class="info-row"><span>Role</span><strong id="infoRole">-</strong></div>
@@ -142,11 +162,28 @@
 <div class="info-row"><span>Total Nota</span><strong id="infoNota">-</strong></div>
 <div class="info-row"><span>Total Master Bahan</span><strong id="infoMaster">-</strong></div>
 </div>
-</div></div>
+</div>
+<div class="panel"><div class="panel-head"><h6><i class="fas fa-hdd me-2"></i>Backup Lokal (JSON)</h6></div>
+<div class="d-flex gap-2 flex-wrap">
+<button class="btn btn-sm btn-outline-success" id="btnSyncExport"><i class="fas fa-download me-1"></i>Export Backup</button>
+<button class="btn btn-sm btn-outline-primary" id="btnSyncImport"><i class="fas fa-upload me-1"></i>Import Backup</button>
+<input type="file" id="syncFile" accept=".json" class="d-none">
+</div>
+</div>
+</div>
 </div>
 </section>
 
 </main>
+
+<!-- Modal: Add/Edit Kategori -->
+<div class="modal fade" id="modalKategori" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title" id="modalKategoriTitle">Tambah Kategori</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="mb-3"><label class="form-label">Nama Kategori</label><input type="text" class="form-control" id="inpKatNama" required placeholder="Contoh: Minuman"></div>
+</div>
+<div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary" id="btnSaveKategori"><i class="fas fa-save me-1"></i>Simpan</button></div>
+</div></div></div>
 
 <!-- Modal: Add/Edit Master -->
 <div class="modal fade" id="modalMaster" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
