@@ -27,66 +27,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Verify source files
-        run: |
-          echo "=== Repo root ==="
-          ls -la
-          echo ""
-          echo "=== Cek file wajib ==="
-          MISSING=0
-          for f in index.html login.html app.html assets/css/styles.css assets/js/utils.js assets/js/auth.js assets/js/store.js assets/js/effects.js assets/js/dashboard.js assets/js/charts.js assets/js/input.js assets/js/pdf.js assets/js/settings.js assets/js/login.js assets/js/app.js; do
-            if [ -f "$f" ]; then
-              echo "✓ OK: $f ($(wc -c < "$f") bytes)"
-            else
-              echo "✗ MISSING: $f"
-              MISSING=$((MISSING+1))
-            fi
-          done
-          if [ "$MISSING" -gt 0 ]; then
-            echo "ERROR: $MISSING file hilang"
-            exit 1
-          fi
-
       - name: Build site
         run: |
           rm -rf _site
           mkdir -p _site
-
-          # Copy semua HTML yang ada
-          cp -f index.html _site/index.html
-          cp -f login.html _site/login.html
-          cp -f app.html _site/app.html
-          cp -f 404.html _site/404.html 2>/dev/null || true
-          cp -f reset.html _site/reset.html 2>/dev/null || true
-
-          # Copy assets
-          cp -r assets _site/assets
-
-          # .nojekyll WAJIB ada di root site
+          cp -f index.html _site/
+          cp -f dashboard.html _site/
+          cp -f 404.html _site/ 2>/dev/null || true
+          cp -r assets _site/
           touch _site/.nojekyll
-
-          # Subfolder mbg-monitor/ yang redirect ke root (jaga-jaga URL lama)
-          mkdir -p _site/mbg-monitor
-          cat > _site/mbg-monitor/index.html << 'EOF'
-          <!doctype html><html><head><meta charset="utf-8"><title>Redirect</title>
-          <meta http-equiv="refresh" content="0; url=../">
-          </head><body><a href="../">Klik di sini</a><script>location.replace('../');</script></body></html>
-          EOF
-          cp _site/mbg-monitor/index.html _site/mbg-monitor/login.html
-          cp _site/mbg-monitor/index.html _site/mbg-monitor/app.html
-          sed -i 's|url=\.\./|url=../login.html|g' _site/mbg-monitor/login.html
-          sed -i "s|location.replace('\.\./')|location.replace('../login.html')|g" _site/mbg-monitor/login.html
-          sed -i 's|url=\.\./|url=../app.html|g' _site/mbg-monitor/app.html
-          sed -i "s|location.replace('\.\./')|location.replace('../app.html')|g" _site/mbg-monitor/app.html
-
-          echo ""
-          echo "=== _site root ==="
-          ls -la _site/
-          echo ""
-          echo "=== _site/assets/js/ ==="
-          ls -la _site/assets/js/
-          echo ""
-          echo "=== Total ukuran ==="
+          echo "=== Site contents ==="
+          find _site -type f | head -30
           du -sh _site/
 
       - name: Upload artifact
