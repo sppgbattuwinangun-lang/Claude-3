@@ -36,9 +36,8 @@ jobs:
           cp -f 404.html _site/ 2>/dev/null || true
           cp -r assets _site/
           touch _site/.nojekyll
-          echo "=== Site contents ==="
-          find _site -type f | head -30
-          du -sh _site/
+          echo "=== Deployed files ==="
+          find _site -type f | sort
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
