@@ -3,560 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SPPG</title>
+    <title>SPPG - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="assets/css/main.css" rel="stylesheet">
 </head>
 <body>
     <!-- Sidebar -->
     <nav id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <i class="fas fa-utensils"></i>
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-utensils"></i></div>
+            <div class="brand-text">
+                <h4>SPPG</h4>
+                <span>Pesanan Gizi</span>
             </div>
-            <h3>SPPG</h3>
-            <p class="sidebar-subtitle">Pengelolaan Pesanan Gizi</p>
         </div>
-        <ul class="sidebar-menu">
-            <li class="menu-item active" data-page="dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </li>
-            <li class="menu-item" data-page="master-data">
-                <i class="fas fa-database"></i>
-                <span>Master Data</span>
-            </li>
-            <li class="menu-item" data-page="nota-pesanan">
-                <i class="fas fa-file-invoice"></i>
-                <span>Nota Pesanan</span>
-            </li>
-            <li class="menu-item" data-page="laporan">
-                <i class="fas fa-chart-bar"></i>
-                <span>Laporan</span>
-            </li>
-            <li class="menu-item" data-page="settings">
-                <i class="fas fa-cog"></i>
-                <span>Pengaturan</span>
-            </li>
-        </ul>
-        <div class="sidebar-footer">
+        <div class="sidebar-nav">
+            <a class="nav-link active" data-page="dashboard"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <a class="nav-link" data-page="master"><i class="fas fa-users"></i><span>Master Data</span></a>
+            <a class="nav-link" data-page="nota"><i class="fas fa-file-invoice"></i><span>Nota Pesanan</span></a>
+            <a class="nav-link" data-page="laporan"><i class="fas fa-chart-pie"></i><span>Laporan</span></a>
+            <a class="nav-link" data-page="settings"><i class="fas fa-cog"></i><span>Pengaturan</span></a>
+        </div>
+        <div class="sidebar-user">
+            <div class="user-avatar"><i class="fas fa-user"></i></div>
             <div class="user-info">
-                <div class="user-avatar"><i class="fas fa-user"></i></div>
-                <div class="user-details">
-                    <span id="currentUser">Admin</span>
-                    <small>Administrator</small>
-                </div>
+                <strong id="userName">Admin</strong>
+                <small id="userRole">Administrator</small>
             </div>
-            <button id="logoutBtn" class="btn btn-logout">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
+            <button class="btn-logout" id="btnLogout" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top Navigation -->
-        <header class="top-navbar">
-            <button id="sidebarToggle" class="btn btn-link sidebar-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="navbar-title">
-                <h4 id="pageTitle">Dashboard</h4>
-                <span class="badge bg-success" id="syncStatus">
-                    <i class="fas fa-sync-alt"></i> Tersinkronisasi
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <h5>SPPG</h5>
+        <span class="sync-badge" id="syncBadge"><i class="fas fa-circle"></i> Online</span>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main -->
+    <main class="main">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <h3 id="pageTitle">Dashboard</h3>
+                <span class="text-muted" id="dateTime"></span>
+            </div>
+            <div class="topbar-right">
+                <span class="sync-indicator" id="syncIndicator">
+                    <i class="fas fa-cloud-upload-alt"></i> Tersinkronisasi
                 </span>
             </div>
-            <div class="navbar-actions">
-                <span class="datetime" id="currentDateTime"></span>
-            </div>
-        </header>
+        </div>
 
-        <!-- Dashboard Page -->
-        <section id="page-dashboard" class="page-content active">
-            <div class="row g-4 mb-4">
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card stat-primary">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                        <div class="stat-info">
-                            <h3 id="totalPenerima">0</h3>
-                            <p>Total Penerima</p>
-                        </div>
-                    </div>
+        <!-- PAGE: Dashboard -->
+        <section class="page active" id="page-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
+                    <div class="stat-data"><h2 id="statPenerima">0</h2><p>Penerima Aktif</p></div>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card stat-success">
-                        <div class="stat-icon"><i class="fas fa-file-invoice"></i></div>
-                        <div class="stat-info">
-                            <h3 id="totalNota">0</h3>
-                            <p>Nota Hari Ini</p>
-                        </div>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-data"><h2 id="statNotaToday">0</h2><p>Nota Hari Ini</p></div>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card stat-warning">
-                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                        <div class="stat-info">
-                            <h3 id="pendingNota">0</h3>
-                            <p>Menunggu Proses</p>
-                        </div>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange"><i class="fas fa-clock"></i></div>
+                    <div class="stat-data"><h2 id="statPending">0</h2><p>Menunggu Proses</p></div>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card stat-info">
-                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-info">
-                            <h3 id="completedNota">0</h3>
-                            <p>Selesai Bulan Ini</p>
-                        </div>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple"><i class="fas fa-check-double"></i></div>
+                    <div class="stat-data"><h2 id="statDone">0</h2><p>Selesai Bulan Ini</p></div>
                 </div>
             </div>
-            <div class="row g-4">
+            <div class="row g-4 mt-2">
                 <div class="col-lg-8">
-                    <div class="content-card">
-                        <div class="card-header-custom">
-                            <h5><i class="fas fa-list me-2"></i>Nota Pesanan Terbaru</h5>
-                            <button class="btn btn-sm btn-primary" onclick="navigateTo('nota-pesanan')">
-                                Lihat Semua
-                            </button>
-                        </div>
+                    <div class="card-panel">
+                        <div class="panel-header"><h6><i class="fas fa-list me-2"></i>Nota Terbaru</h6></div>
                         <div class="table-responsive">
-                            <table class="table table-modern" id="recentNotaTable">
-                                <thead>
-                                    <tr>
-                                        <th>No. Nota</th>
-                                        <th>Tanggal</th>
-                                        <th>Penerima</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recentNotaBody">
-                                    <tr><td colspan="5" class="text-center text-muted py-4">Belum ada data</td></tr>
-                                </tbody>
-                            </table>
+                            <table class="table-custom"><thead><tr><th>No Nota</th><th>Tanggal</th><th>Penerima</th><th>Status</th><th>Aksi</th></tr></thead>
+                            <tbody id="recentNota"><tr><td colspan="5" class="empty">Belum ada data</td></tr></tbody></table>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="content-card">
-                        <div class="card-header-custom">
-                            <h5><i class="fas fa-bell me-2"></i>Aktivitas Terkini</h5>
-                        </div>
-                        <div class="activity-feed" id="activityFeed">
-                            <div class="text-center text-muted py-4">Belum ada aktivitas</div>
-                        </div>
+                    <div class="card-panel">
+                        <div class="panel-header"><h6><i class="fas fa-bolt me-2"></i>Aktivitas</h6></div>
+                        <div class="activity-list" id="activityList"><p class="empty">Belum ada aktivitas</p></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Master Data Page -->
-        <section id="page-master-data" class="page-content">
-            <div class="page-actions mb-4">
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-primary" id="btnAddPenerima">
-                        <i class="fas fa-plus me-2"></i>Tambah Penerima
-                    </button>
-                    <button class="btn btn-outline-success" id="btnImportExcel">
-                        <i class="fas fa-file-excel me-2"></i>Import Excel
-                    </button>
-                    <button class="btn btn-outline-info" id="btnExportData">
-                        <i class="fas fa-download me-2"></i>Export Data
-                    </button>
+        <!-- PAGE: Master Data -->
+        <section class="page" id="page-master">
+            <div class="page-toolbar">
+                <div class="toolbar-left">
+                    <button class="btn btn-primary" id="btnAddPenerima"><i class="fas fa-plus me-2"></i>Tambah</button>
+                    <button class="btn btn-outline-success" id="btnImport"><i class="fas fa-file-excel me-2"></i>Import</button>
+                    <button class="btn btn-outline-info" id="btnExport"><i class="fas fa-download me-2"></i>Export</button>
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchPenerima" placeholder="Cari penerima...">
+                <div class="toolbar-right">
+                    <div class="search-input"><i class="fas fa-search"></i><input type="text" id="searchMaster" placeholder="Cari penerima..."></div>
                 </div>
             </div>
-            <div class="content-card">
+            <div class="card-panel">
                 <div class="table-responsive">
-                    <table class="table table-modern" id="masterDataTable">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>NISN/NIK</th>
-                                <th>Nama Penerima</th>
-                                <th>Tanggal Lahir</th>
-                                <th>Jenis Kelamin</th>
-                                <th>Nama Orang Tua</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="masterDataBody">
-                            <tr><td colspan="8" class="text-center text-muted py-4">Memuat data...</td></tr>
-                        </tbody>
-                    </table>
+                    <table class="table-custom"><thead><tr><th>#</th><th>NISN/NIK</th><th>Nama</th><th>Tgl Lahir</th><th>JK</th><th>Ortu</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="masterBody"><tr><td colspan="8" class="empty">Memuat...</td></tr></tbody></table>
                 </div>
             </div>
         </section>
 
-        <!-- Nota Pesanan Page -->
-        <section id="page-nota-pesanan" class="page-content">
-            <div class="page-actions mb-4">
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-primary" id="btnAddNota">
-                        <i class="fas fa-plus me-2"></i>Buat Nota Baru
-                    </button>
-                    <button class="btn btn-outline-danger" id="btnDownloadPDF">
-                        <i class="fas fa-file-pdf me-2"></i>Download PDF
-                    </button>
-                    <button class="btn btn-outline-secondary" id="btnFilterNota">
-                        <i class="fas fa-filter me-2"></i>Filter
-                    </button>
+        <!-- PAGE: Nota Pesanan -->
+        <section class="page" id="page-nota">
+            <div class="page-toolbar">
+                <div class="toolbar-left">
+                    <button class="btn btn-primary" id="btnAddNota"><i class="fas fa-plus me-2"></i>Buat Nota</button>
+                    <button class="btn btn-outline-danger" id="btnPDFToday"><i class="fas fa-file-pdf me-2"></i>PDF Hari Ini</button>
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchNota" placeholder="Cari nota...">
+                <div class="toolbar-right">
+                    <div class="search-input"><i class="fas fa-search"></i><input type="text" id="searchNota" placeholder="Cari nota..."></div>
                 </div>
             </div>
-            <div class="filter-panel d-none" id="filterPanel">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Tanggal Mulai</label>
-                        <input type="date" class="form-control" id="filterDateStart">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Tanggal Akhir</label>
-                        <input type="date" class="form-control" id="filterDateEnd">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" id="filterStatus">
-                            <option value="">Semua</option>
-                            <option value="pending">Menunggu</option>
-                            <option value="process">Diproses</option>
-                            <option value="completed">Selesai</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-primary w-100" id="btnApplyFilter">Terapkan</button>
-                    </div>
-                </div>
-            </div>
-            <div class="content-card">
+            <div class="card-panel">
                 <div class="table-responsive">
-                    <table class="table table-modern" id="notaTable">
-                        <thead>
-                            <tr>
-                                <th>No. Nota</th>
-                                <th>Tanggal</th>
-                                <th>Penerima</th>
-                                <th>Item Pesanan</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="notaBody">
-                            <tr><td colspan="7" class="text-center text-muted py-4">Belum ada nota</td></tr>
-                        </tbody>
-                    </table>
+                    <table class="table-custom"><thead><tr><th>No Nota</th><th>Tanggal</th><th>Penerima</th><th>Item</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="notaBody"><tr><td colspan="6" class="empty">Belum ada nota</td></tr></tbody></table>
                 </div>
             </div>
         </section>
 
-        <!-- Laporan Page -->
-        <section id="page-laporan" class="page-content">
-            <div class="page-actions mb-4">
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-danger" id="btnDownloadLaporan">
-                        <i class="fas fa-file-pdf me-2"></i>Download Laporan PDF
-                    </button>
-                    <button class="btn btn-outline-primary" id="btnLaporanHarian">
-                        <i class="fas fa-calendar-day me-2"></i>Harian
-                    </button>
-                    <button class="btn btn-outline-primary" id="btnLaporanBulanan">
-                        <i class="fas fa-calendar-alt me-2"></i>Bulanan
-                    </button>
-                </div>
-                <div class="d-flex gap-2">
-                    <input type="date" class="form-control" id="laporanDate">
+        <!-- PAGE: Laporan -->
+        <section class="page" id="page-laporan">
+            <div class="page-toolbar">
+                <div class="toolbar-left">
+                    <input type="date" class="form-control" id="laporanDate" style="width:200px">
+                    <button class="btn btn-primary" id="btnLoadLaporan"><i class="fas fa-search me-2"></i>Tampilkan</button>
+                    <button class="btn btn-danger" id="btnLaporanPDF"><i class="fas fa-file-pdf me-2"></i>Download PDF</button>
                 </div>
             </div>
-            <div class="content-card">
-                <div class="laporan-summary mb-4">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="summary-item">
-                                <span class="summary-label">Total Nota</span>
-                                <span class="summary-value" id="laporanTotalNota">0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="summary-item">
-                                <span class="summary-label">Total Penerima</span>
-                                <span class="summary-value" id="laporanTotalPenerima">0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="summary-item">
-                                <span class="summary-label">Total Item</span>
-                                <span class="summary-value" id="laporanTotalItem">0</span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="card-panel">
+                <div class="laporan-stats">
+                    <div class="ls-item"><span class="ls-val" id="lsNota">0</span><span class="ls-label">Nota</span></div>
+                    <div class="ls-item"><span class="ls-val" id="lsPenerima">0</span><span class="ls-label">Penerima</span></div>
+                    <div class="ls-item"><span class="ls-val" id="lsItem">0</span><span class="ls-label">Item</span></div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-modern" id="laporanTable">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>No. Nota</th>
-                                <th>Penerima</th>
-                                <th>Item</th>
-                                <th>Jumlah</th>
-                                <th>Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="laporanBody">
-                            <tr><td colspan="6" class="text-center text-muted py-4">Pilih tanggal untuk melihat laporan</td></tr>
-                        </tbody>
-                    </table>
+                <div class="table-responsive mt-3">
+                    <table class="table-custom"><thead><tr><th>#</th><th>No Nota</th><th>Penerima</th><th>Item</th><th>Jumlah</th><th>Ket</th></tr></thead>
+                    <tbody id="laporanBody"><tr><td colspan="6" class="empty">Pilih tanggal</td></tr></tbody></table>
                 </div>
             </div>
         </section>
 
-        <!-- Settings Page -->
-        <section id="page-settings" class="page-content">
+        <!-- PAGE: Settings -->
+        <section class="page" id="page-settings">
             <div class="row g-4">
                 <div class="col-md-6">
-                    <div class="content-card">
-                        <div class="card-header-custom">
-                            <h5><i class="fas fa-user-shield me-2"></i>Akun Admin</h5>
+                    <div class="card-panel">
+                        <div class="panel-header"><h6><i class="fas fa-database me-2"></i>Sinkronisasi Data</h6></div>
+                        <p class="text-muted mb-3" style="font-size:13px">Export data untuk dipindahkan ke device lain, atau import data dari device lain.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-primary" id="btnSyncExport"><i class="fas fa-upload me-2"></i>Export Sync</button>
+                            <button class="btn btn-outline-primary" id="btnSyncImport"><i class="fas fa-download me-2"></i>Import Sync</button>
+                            <input type="file" id="syncFileInput" accept=".json" class="d-none">
                         </div>
-                        <form id="settingsForm">
-                            <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-control" id="settingsUsername" disabled>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Password Baru</label>
-                                <input type="password" class="form-control" id="settingsNewPassword" placeholder="Kosongkan jika tidak diubah">
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Simpan Perubahan
-                            </button>
-                        </form>
+                        <div class="mt-3 p-3 rounded" style="background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.1)">
+                            <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Data tersimpan di localStorage browser. Untuk sinkronisasi antar device, gunakan Export/Import.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="content-card">
-                        <div class="card-header-custom">
-                            <h5><i class="fas fa-database me-2"></i>Data & Sinkronisasi</h5>
-                        </div>
+                    <div class="card-panel">
+                        <div class="panel-header"><h6><i class="fas fa-user-shield me-2"></i>Info Akun</h6></div>
                         <div class="settings-info">
-                            <div class="info-item">
-                                <span>Status Sinkronisasi</span>
-                                <span class="badge bg-success" id="settingSyncStatus">Aktif</span>
-                            </div>
-                            <div class="info-item">
-                                <span>Terakhir Sync</span>
-                                <span id="lastSyncTime">-</span>
-                            </div>
-                            <div class="info-item">
-                                <span>Total Data Tersimpan</span>
-                                <span id="totalStoredData">0 records</span>
-                            </div>
+                            <div class="si-row"><span>Username</span><strong id="siUsername">-</strong></div>
+                            <div class="si-row"><span>Role</span><strong id="siRole">-</strong></div>
+                            <div class="si-row"><span>Login Sejak</span><strong id="siLogin">-</strong></div>
+                            <div class="si-row"><span>Total Data</span><strong id="siTotal">-</strong></div>
                         </div>
-                        <button class="btn btn-outline-warning mt-3" id="btnForceSync">
-                            <i class="fas fa-sync me-2"></i>Force Sync
-                        </button>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Modal: Tambah/Edit Penerima -->
-    <div class="modal fade" id="modalPenerima" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalPenerimaTitle">Tambah Penerima Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formPenerima">
-                        <input type="hidden" id="penerimaId">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">NISN/NIK <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="inputNIK" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Nama Penerima <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="inputNama" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Tanggal Lahir</label>
-                                <input type="date" class="form-control" id="inputTglLahir">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Jenis Kelamin</label>
-                                <select class="form-select" id="inputJenisKelamin">
-                                    <option value="">Pilih</option>
-                                    <option value="L">Laki-laki</option>
-                                    <option value="P">Perempuan</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Nama Orang Tua</label>
-                                <input type="text" class="form-control" id="inputOrtu">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Posisi/Kelas</label>
-                                <input type="text" class="form-control" id="inputPosisi">
-                            </div>
-                            <div class="col-md-12">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="inputStatusAktif" checked>
-                                    <label class="form-check-label" for="inputStatusAktif">Status Aktif Menerima</label>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="btnSavePenerima">
-                        <i class="fas fa-save me-2"></i>Simpan
-                    </button>
-                </div>
-            </div>
+    <!-- MODAL: Penerima -->
+    <div class="modal fade" id="modalPenerima" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="modalPenerimaTitle">Tambah Penerima</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form id="formPenerima"><div class="row g-3">
+                <div class="col-md-6"><label class="form-label">NISN/NIK *</label><input type="text" class="form-control" id="inpNIK" required></div>
+                <div class="col-md-6"><label class="form-label">Nama *</label><input type="text" class="form-control" id="inpNama" required></div>
+                <div class="col-md-4"><label class="form-label">Tgl Lahir</label><input type="date" class="form-control" id="inpTglLahir"></div>
+                <div class="col-md-4"><label class="form-label">Jenis Kelamin</label><select class="form-select" id="inpJK"><option value="">-</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+                <div class="col-md-4"><label class="form-label">Posisi/Kelas</label><input type="text" class="form-control" id="inpPosisi"></div>
+                <div class="col-md-6"><label class="form-label">Nama Ortu</label><input type="text" class="form-control" id="inpOrtu"></div>
+                <div class="col-md-6 d-flex align-items-end"><div class="form-check"><input class="form-check-input" type="checkbox" id="inpAktif" checked><label class="form-check-label" for="inpAktif">Aktif Menerima</label></div></div>
+            </div></form>
         </div>
-    </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="button" class="btn btn-primary" id="btnSavePenerima"><i class="fas fa-save me-2"></i>Simpan</button></div>
+    </div></div></div>
 
-    <!-- Modal: Buat Nota Pesanan -->
-    <div class="modal fade" id="modalNota" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalNotaTitle">Buat Nota Pesanan Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formNota">
-                        <input type="hidden" id="notaId">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label">No. Nota</label>
-                                <input type="text" class="form-control" id="inputNoNota" readonly>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Tanggal <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="inputTglNota" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Penerima <span class="text-danger">*</span></label>
-                                <select class="form-select" id="inputPenerimaNota" required>
-                                    <option value="">Pilih Penerima</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="nota-items-section">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Item Pesanan</h6>
-                                <button type="button" class="btn btn-sm btn-success" id="btnAddItem">
-                                    <i class="fas fa-plus me-1"></i>Tambah Item
-                                </button>
-                            </div>
-                            <div id="notaItemsContainer">
-                                <div class="nota-item-row" data-index="0">
-                                    <div class="row g-2">
-                                        <div class="col-md-4">
-                                            <input type="text" class="form-control" placeholder="Nama Item" name="itemName[]" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="number" class="form-control" placeholder="Jumlah" name="itemQty[]" min="1" value="1" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="text" class="form-control" placeholder="Satuan" name="itemUnit[]" value="porsi">
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input type="text" class="form-control" placeholder="Keterangan" name="itemNote[]">
-                                        </div>
-                                        <div class="col-md-1">
-                                            <button type="button" class="btn btn-outline-danger btn-sm btn-remove-item w-100" disabled>
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <label class="form-label">Catatan Tambahan</label>
-                            <textarea class="form-control" id="inputCatatanNota" rows="2" placeholder="Catatan khusus..."></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="btnSaveNota">
-                        <i class="fas fa-save me-2"></i>Simpan Nota
-                    </button>
-                </div>
+    <!-- MODAL: Nota -->
+    <div class="modal fade" id="modalNota" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="modalNotaTitle">Buat Nota</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-3"><label class="form-label">No. Nota</label><input type="text" class="form-control" id="inpNoNota" readonly></div>
+                <div class="col-md-3"><label class="form-label">Tanggal *</label><input type="date" class="form-control" id="inpTglNota" required></div>
+                <div class="col-md-6"><label class="form-label">Penerima *</label><select class="form-select" id="inpPenerima" required><option value="">Pilih...</option></select></div>
             </div>
+            <div class="items-section">
+                <div class="d-flex justify-content-between align-items-center mb-2"><strong><i class="fas fa-list me-2"></i>Item Pesanan</strong><button type="button" class="btn btn-sm btn-success" id="btnAddItem"><i class="fas fa-plus me-1"></i>Item</button></div>
+                <div id="itemsContainer"></div>
+            </div>
+            <div class="mt-3"><label class="form-label">Catatan</label><textarea class="form-control" id="inpCatatan" rows="2" placeholder="Opsional..."></textarea></div>
         </div>
-    </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="button" class="btn btn-primary" id="btnSaveNota"><i class="fas fa-save me-2"></i>Simpan</button></div>
+    </div></div></div>
 
-    <!-- Modal: Import Excel -->
-    <div class="modal fade" id="modalImport" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Import Data dari Excel</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="upload-zone" id="uploadZone">
-                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                        <p>Drag & drop file Excel di sini atau klik untuk memilih</p>
-                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="d-none">
-                        <button class="btn btn-outline-primary" id="btnSelectFile">Pilih File</button>
-                    </div>
-                    <div class="mt-3 d-none" id="importPreview">
-                        <h6>Preview Data:</h6>
-                        <div class="table-responsive" style="max-height: 300px;">
-                            <table class="table table-sm" id="importPreviewTable">
-                                <thead id="importPreviewHead"></thead>
-                                <tbody id="importPreviewBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-success d-none" id="btnConfirmImport">
-                        <i class="fas fa-check me-2"></i>Import Data
-                    </button>
-                </div>
-            </div>
+    <!-- MODAL: Import -->
+    <div class="modal fade" id="modalImport" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Import Excel</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div class="upload-zone" id="uploadZone"><i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color:#64748b"></i><p>Drop file Excel atau klik untuk memilih</p><input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="d-none"></div>
+            <div id="importPreview" class="d-none mt-3"><div class="table-responsive" style="max-height:250px"><table class="table table-sm" id="previewTable"><thead id="prevHead"></thead><tbody id="prevBody"></tbody></table></div></div>
         </div>
-    </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="button" class="btn btn-success d-none" id="btnDoImport"><i class="fas fa-check me-2"></i>Import</button></div>
+    </div></div></div>
 
-    <!-- Toast Notification -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="toastNotif" class="toast" role="alert">
-            <div class="toast-header">
-                <i class="fas fa-bell me-2 text-primary"></i>
-                <strong class="me-auto" id="toastTitle">Notifikasi</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body" id="toastMessage"></div>
-        </div>
-    </div>
+    <!-- Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="toast" class="toast" role="alert"><div class="toast-body" id="toastMsg"></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script type="module" src="assets/js/firebase-config.js"></script>
-    <script type="module" src="assets/js/app-main.js"></script>
+    <script src="assets/js/app.js"></script>
 </body>
 </html>
